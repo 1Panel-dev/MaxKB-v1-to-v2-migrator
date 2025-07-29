@@ -10,6 +10,7 @@ from django.db.models import QuerySet
 from rest_framework import serializers
 
 from dataset.models import DataSet, Document, Paragraph, Problem, ProblemParagraphMapping, Image, File
+from embedding.models import Embedding
 from .util import page, save_batch_file
 
 
@@ -55,6 +56,12 @@ class FileModel(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class EmbeddingModel(serializers.ModelSerializer):
+    class Meta:
+        model = Embedding
+        fields = "__all__"
+
+
 def knowledge_export(knowledge_list, current_page):
     batch_data = [KnowledgeModel(knowledge).data for knowledge in knowledge_list]
     save_batch_file(batch_data, "knowledge", current_page)
@@ -93,6 +100,11 @@ def file_export(file_list, current_page):
     save_batch_file(batch_data, "file", current_page)
 
 
+def embedding_export(embedding_list, current_page):
+    batch_data = [EmbeddingModel(embedding).data for embedding in embedding_list]
+    save_batch_file(batch_data, "embedding", current_page)
+
+
 def export():
     page(QuerySet(DataSet), 100, knowledge_export, "导出知识库")
     page(QuerySet(Document), 100, document_export, "导出文档")
@@ -101,4 +113,4 @@ def export():
     page(QuerySet(ProblemParagraphMapping), 100, problem_paragraph_mapping_export, "导出问题段落关联关系")
     page(QuerySet(File), 10, file_export, "导出文件")
     page(QuerySet(Image), 10, image_export, "导出图片")
-    page(QuerySet(File), 10, file_export, "导出文件")
+    page(QuerySet(Embedding), 100, embedding_export, "导出向量")

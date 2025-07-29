@@ -17,7 +17,11 @@ django.setup()
 def export():
     from .application_export import export as _export
     from .knowledge_export import export as knowledge_export
+    from .setting_export import export as setting_export
+    from .function_lib import export as function_export
     from .util import zip_folder
     _export()
     knowledge_export()
+    function_export()
+    setting_export()
     zip_folder()
