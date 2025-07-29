@@ -15,4 +15,5 @@ django.setup()
 
 
 def export():
-    import export.application_export
+    from .application_export import export as _export
+    _export()

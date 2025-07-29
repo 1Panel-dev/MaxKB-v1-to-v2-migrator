@@ -11,7 +11,7 @@ import os
 import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_DIR = os.path.join(BASE_DIR, 'apps')
+APP_DIR = os.path.join(os.path.dirname(BASE_DIR), 'apps')
 os.chdir(BASE_DIR)
 sys.path.insert(0, APP_DIR)
 
