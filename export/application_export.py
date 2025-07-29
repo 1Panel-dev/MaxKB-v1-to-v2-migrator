@@ -9,11 +9,9 @@
 from django.db.models import QuerySet
 from rest_framework import serializers
 
-from application.models import Application, WorkFlowVersion, Chat, ChatRecord
+from application.models import Application, WorkFlowVersion, Chat, ChatRecord, ApplicationDatasetMapping
 from application.models.api_key_model import ApplicationApiKey, ApplicationAccessToken, ApplicationPublicAccessClient
 from .util import page, save_batch_file
-
-count = QuerySet(Application).count()
 
 
 class ApplicationModel(serializers.ModelSerializer):
@@ -58,6 +56,12 @@ class ChatRecordModel(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ApplicationDatasetMappingModel(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationDatasetMapping
+        fields = "__all__"
+
+
 def application_export(application_list, current_page):
     batch_list = [ApplicationModel(application).data for application in application_list]
     save_batch_file(batch_list, "application", current_page)
@@ -93,7 +97,13 @@ def chat_export(chat_list, current_page):
 
 def chat_record_export(chat_record_list, current_page):
     batch_list = [ChatRecordModel(chat_record).data for chat_record in chat_record_list]
-    save_batch_file(batch_list, 'chat', current_page)
+    save_batch_file(batch_list, 'chat_record', current_page)
+
+
+def application_dataset_mapping_export(application_dataset_mapping_list, current_page):
+    batch_list = [ApplicationDatasetMappingModel(application_dataset_mapping) for application_dataset_mapping in
+                  application_dataset_mapping_list]
+    save_batch_file(batch_list, 'application_dataset_mapping', current_page)
 
 
 def export():
@@ -106,3 +116,5 @@ def export():
          "导出应用客户端信息")
     page(QuerySet(Chat), 50, chat_export, "导出对话日志")
     page(QuerySet(ChatRecord), 50, chat_record_export, "导出对话日志记录")
+    page(QuerySet(ChatRecord), 50, chat_record_export, "导出对话日志记录")
+    page(QuerySet(ChatRecord), 50, application_dataset_mapping_export, "导出应用与知识库的关联关系")

@@ -10,6 +10,7 @@ import os
 from math import ceil
 from tqdm import tqdm
 import pickle
+import shutil
 
 from migrate import BASE_DIR
 
@@ -43,3 +44,9 @@ def save_batch_file(data_list, source_name, current_page):
     with open(base_path, 'wb') as f:
         # 使用pickle的dump方法将对象序列化并写入文件
         pickle.dump(data_list, f)
+
+
+def zip_folder():
+    folder_path = f"{BASE_DIR}/data/"
+    zip_name = f"{BASE_DIR}/migrate"
+    shutil.make_archive(zip_name, 'zip', folder_path)
