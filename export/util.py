@@ -51,6 +51,7 @@ def page(query_set, page_size, handler, source_name, desc, primary_key="id", che
             if check(source_name, i + 1):
                 data_list = query.all()[offset: offset + page_size]
                 handler(data_list, source_name, i + 1)
+                pbar.refresh()
             pbar.update(page_size if offset + page_size <= count else count - offset)
 
 
