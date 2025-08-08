@@ -7,22 +7,38 @@
     @desc:
 """
 import os
-from math import ceil
+from math import ceil, floor
 from tqdm import tqdm
 import pickle
 import shutil
 
 from migrate import BASE_DIR
 
+source_dir_size = 1000
 
-def page(query_set, page_size, handler, desc, primary_key="id"):
+
+def _check(source_name, current_page):
+    """
+
+    @param source_name:
+    @param current_page:
+    @return:
+    """
+    dir_path = get_dir_path(source_name, current_page)
+    base_path = f"{dir_path}/{current_page}.pickle"
+    return not os.path.exists(base_path)
+
+
+def page(query_set, page_size, handler, source_name, desc, primary_key="id", check=_check):
     """
 
     @param primary_key: 主键
-    @param desc: 任务描述
-    @param query_set: 查询query_set
-    @param page_size: 每次查询大小
-    @param handler:   数据处理器
+    @param desc:        任务描述
+    @param query_set:   查询query_set
+    @param page_size:   每次查询大小
+    @param handler:     数据处理器
+    @param source_name: 资源名称
+    @param check:       校验是否已经导出
     @return:
     """
 
@@ -32,13 +48,19 @@ def page(query_set, page_size, handler, desc, primary_key="id"):
               bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}") as pbar:
         for i in range(0, ceil(count / page_size)):
             offset = i * page_size
-            data_list = query.all()[offset: offset + page_size]
-            handler(data_list, i + 1)
-            pbar.update(len(data_list))
+            if check(source_name, i + 1):
+                data_list = query.all()[offset: offset + page_size]
+                handler(data_list, source_name, i + 1)
+            pbar.update(page_size if offset + page_size <= count else count - offset)
+
+
+def get_dir_path(source_name, current_page):
+    dir_path = f"{BASE_DIR}/data/{source_name}/{ceil(current_page / 1000)}/"
+    return dir_path
 
 
 def save_batch_file(data_list, source_name, current_page):
-    dir_path = f"{BASE_DIR}/data/{source_name}/"
+    dir_path = get_dir_path(source_name, current_page)
     base_path = f"{dir_path}/{current_page}.pickle"
     os.makedirs(dir_path, exist_ok=True)
     with open(base_path, 'wb') as f:
@@ -49,4 +71,6 @@ def save_batch_file(data_list, source_name, current_page):
 def zip_folder():
     folder_path = f"{BASE_DIR}/data/"
     zip_name = f"{BASE_DIR}/migrate"
+    if os.path.exists(zip_name + '.zip'):
+        return
     shutil.make_archive(zip_name, 'zip', folder_path)

@@ -19,10 +19,10 @@ class FunctionLibModel(serializers.ModelSerializer):
         fields = "__all__"
 
 
-def function_lib_export(function_lib_list, current_page):
+def function_lib_export(function_lib_list, source_name, current_page):
     batch_list = [FunctionLibModel(function_lib).data for function_lib in function_lib_list]
-    save_batch_file(batch_list, 'function_lib', current_page)
+    save_batch_file(batch_list, source_name, current_page)
 
 
 def export():
-    page(QuerySet(FunctionLib), 100, function_lib_export, "导出函数库")
+    page(QuerySet(FunctionLib), 100, function_lib_export, "function_lib", "导出函数库")

@@ -62,55 +62,56 @@ class EmbeddingModel(serializers.ModelSerializer):
         fields = "__all__"
 
 
-def knowledge_export(knowledge_list, current_page):
+def knowledge_export(knowledge_list, source_name, current_page):
     batch_data = [KnowledgeModel(knowledge).data for knowledge in knowledge_list]
-    save_batch_file(batch_data, "knowledge", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def document_export(document_list, current_page):
+def document_export(document_list, source_name, current_page):
     batch_data = [DocumentModel(document).data for document in document_list]
-    save_batch_file(batch_data, "document", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def paragraph_export(paragraph_list, current_page):
+def paragraph_export(paragraph_list, source_name, current_page):
     batch_data = [ParagraphModel(paragraph).data for paragraph in paragraph_list]
-    save_batch_file(batch_data, "paragraph", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def problem_export(problem_list, current_page):
+def problem_export(problem_list, source_name, current_page):
     batch_data = [ProblemModel(problem).data for problem in problem_list]
-    save_batch_file(batch_data, "problem", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def problem_paragraph_mapping_export(problem_paragraph_mapping_list, current_page):
+def problem_paragraph_mapping_export(problem_paragraph_mapping_list, source_name, current_page):
     batch_data = [ProblemParagraphMappingModel(problem_paragraph_mapping).data for problem_paragraph_mapping in
                   problem_paragraph_mapping_list]
-    save_batch_file(batch_data, "problem_paragraph_mapping", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def image_export(image_list, current_page):
+def image_export(image_list, source_name, current_page):
     batch_data = [ImageModel(image).data for image in
                   image_list]
-    save_batch_file(batch_data, "image", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def file_export(file_list, current_page):
+def file_export(file_list, source_name, current_page):
     batch_data = [{**FileModel(file).data, 'content': file.get_byte().tobytes()} for file in
                   file_list]
-    save_batch_file(batch_data, "file", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
-def embedding_export(embedding_list, current_page):
+def embedding_export(embedding_list, source_name, current_page):
     batch_data = [EmbeddingModel(embedding).data for embedding in embedding_list]
-    save_batch_file(batch_data, "embedding", current_page)
+    save_batch_file(batch_data, source_name, current_page)
 
 
 def export():
-    page(QuerySet(DataSet), 100, knowledge_export, "导出知识库")
-    page(QuerySet(Document), 100, document_export, "导出文档")
-    page(QuerySet(Paragraph), 100, paragraph_export, "导出段落")
-    page(QuerySet(Problem), 100, problem_export, "导出问题")
-    page(QuerySet(ProblemParagraphMapping), 100, problem_paragraph_mapping_export, "导出问题段落关联关系")
-    page(QuerySet(File), 10, file_export, "导出文件")
-    page(QuerySet(Image), 10, image_export, "导出图片")
-    page(QuerySet(Embedding), 100, embedding_export, "导出向量")
+    page(QuerySet(DataSet), 100, knowledge_export, "knowledge", "导出知识库")
+    page(QuerySet(Document), 100, document_export, "document", "导出文档")
+    page(QuerySet(Paragraph), 100, paragraph_export, "paragraph", "导出段落")
+    page(QuerySet(Problem), 100, problem_export, "problem", "导出问题")
+    page(QuerySet(ProblemParagraphMapping), 100, problem_paragraph_mapping_export, "problem_paragraph_mapping",
+         "导出问题段落关联关系")
+    page(QuerySet(File), 10, file_export, "file", "导出文件")
+    page(QuerySet(Image), 10, image_export, "image", "导出图片")
+    page(QuerySet(Embedding), 100, embedding_export, "embedding", "导出向量")
