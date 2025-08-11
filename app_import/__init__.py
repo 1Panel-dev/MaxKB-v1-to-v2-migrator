@@ -15,4 +15,7 @@ django.setup()
 
 
 def app_import():
-    pass
+    from commons.util import un_zip
+    from .application_import import import_ as application_import
+    un_zip()
+    application_import()

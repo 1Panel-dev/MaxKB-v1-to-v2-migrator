@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 from application.models import Application, WorkFlowVersion, Chat, ChatRecord, ApplicationDatasetMapping
 from application.models.api_key_model import ApplicationApiKey, ApplicationAccessToken, ApplicationPublicAccessClient
-from .util import page, save_batch_file
+from commons.util import page, save_batch_file
 
 
 class ApplicationModel(serializers.ModelSerializer):

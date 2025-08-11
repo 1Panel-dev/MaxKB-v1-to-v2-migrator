@@ -8,6 +8,8 @@
 """
 import os
 from math import ceil, floor
+from pathlib import Path
+
 from tqdm import tqdm
 import pickle
 import shutil
@@ -15,6 +17,26 @@ import shutil
 from migrate import BASE_DIR
 
 source_dir_size = 1000
+
+
+class ImportQuerySet:
+
+    def __init__(self, source_name: str):
+        directory_path = Path(f"{BASE_DIR}/data/{source_name}/")
+        self.file_list = [f for f in directory_path.rglob('*') if f.is_file()]
+
+    def count(self):
+        return len(self.file_list)
+
+    def order_by(self, k):
+        self.file_list.sort(key=lambda f: int(f.stem))
+        return self
+
+    def all(self):
+        return self
+
+    def __getitem__(self, item):
+        return self.file_list[item.start:item.stop]
 
 
 def _check(source_name, current_page):
@@ -26,6 +48,12 @@ def _check(source_name, current_page):
     """
     dir_path = get_dir_path(source_name, current_page)
     base_path = f"{dir_path}/{current_page}.pickle"
+    return not os.path.exists(base_path)
+
+
+def import_check(source_name, current_page):
+    dir_path = get_dir_path(source_name, current_page)
+    base_path = f"{dir_path}/{current_page}.pickle_done"
     return not os.path.exists(base_path)
 
 
@@ -69,9 +97,24 @@ def save_batch_file(data_list, source_name, current_page):
         pickle.dump(data_list, f)
 
 
+def rename(file):
+    new_name = f"{file.name}_done"
+    new_path = file.with_name(new_name)
+    file.rename(new_path)
+
+
 def zip_folder():
     folder_path = f"{BASE_DIR}/data/"
     zip_name = f"{BASE_DIR}/migrate"
     if os.path.exists(zip_name + '.zip'):
         return
     shutil.make_archive(zip_name, 'zip', folder_path)
+
+def un_zip():
+    zip_name = Path(f"{BASE_DIR}/migrate.zip")
+    extract_dir = Path(f"{BASE_DIR}/data/")
+    if os.path.exists(extract_dir):
+        return
+    extract_dir.mkdir(exist_ok=True)
+    with zipfile.ZipFile(zip_name, 'r') as zip_ref:
+        zip_ref.extractall(extract_dir)

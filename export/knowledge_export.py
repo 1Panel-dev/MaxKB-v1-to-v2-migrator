@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 from dataset.models import DataSet, Document, Paragraph, Problem, ProblemParagraphMapping, Image, File
 from embedding.models import Embedding
-from .util import page, save_batch_file
+from commons.util import page, save_batch_file
 
 
 class KnowledgeModel(serializers.ModelSerializer):

@@ -13,7 +13,7 @@ from rest_framework import serializers
 from setting.models import Model, SystemSetting, TeamMemberPermission
 from setting.models.log_management import Log
 from users.models import User
-from .util import page, save_batch_file
+from commons.util import page, save_batch_file
 
 
 class LogModel(serializers.ModelSerializer):
