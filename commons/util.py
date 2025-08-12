@@ -7,6 +7,7 @@
     @desc:
 """
 import os
+import zipfile
 from math import ceil, floor
 from pathlib import Path
 
@@ -109,6 +110,7 @@ def zip_folder():
     if os.path.exists(zip_name + '.zip'):
         return
     shutil.make_archive(zip_name, 'zip', folder_path)
+
 
 def un_zip():
     zip_name = Path(f"{BASE_DIR}/migrate.zip")

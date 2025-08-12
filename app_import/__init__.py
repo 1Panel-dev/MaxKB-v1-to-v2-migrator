@@ -17,5 +17,7 @@ django.setup()
 def app_import():
     from commons.util import un_zip
     from .application_import import import_ as application_import
+    from .setting_import import import_ as setting_import
     un_zip()
+    setting_import()
     application_import()
