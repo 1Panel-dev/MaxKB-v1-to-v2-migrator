@@ -18,6 +18,9 @@ def app_import():
     from commons.util import un_zip
     from .application_import import import_ as application_import
     from .setting_import import import_ as setting_import
+    from .file_import import import_ as file_import
     un_zip()
+    file_import()
     setting_import()
     application_import()
+
