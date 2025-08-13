@@ -6,12 +6,16 @@
     @date：2025/8/11 18:24
     @desc:
 """
+import datetime
 import pickle
 
 from django.db.models import QuerySet
 
-from application.models import Application, ApplicationFolder
+from application.models import Application, ApplicationFolder, ApplicationVersion, ApplicationApiKey, \
+    ApplicationAccessToken, ApplicationChatUserStats, Chat, ChatRecord
+from application.serializers.application import ApplicationOperateSerializer
 from commons.util import page, ImportQuerySet, import_check, rename
+from knowledge.models import File
 
 
 def to_v2_node(node):
@@ -35,15 +39,30 @@ def to_v2_node(node):
 
 def to_v2_workflow(workflow):
     nodes = workflow.get('nodes')
-    nodes = [to_v2_node(node) for node in nodes]
+    if nodes is not None:
+        nodes = [to_v2_node(node) for node in nodes]
     return {**workflow, 'nodes': nodes}
+
+
+def to_v2_icon(icon, application_id):
+    if icon == '/ui/favicon.ico':
+        return "./favicon.ico"
+    elif icon.startswith('/api/image/'):
+        QuerySet(File).filter(id=icon.replace("/api/image/", '')).update(source_type='APPLICATION',
+                                                                         source_id=application_id)
+        return icon.replace("/api/image/", './oss/file/')
+    elif icon.startswith('/api/file/'):
+        QuerySet(File).filter(id=icon.replace("/api/file/", '')).update(source_type='APPLICATION',
+                                                                        source_id=application_id)
+        return icon.replace("/api/file/", './oss/file/')
+    return icon
 
 
 def to_v2_application(application):
     return Application(id=application.get('id'),
                        workspace_id='default',
                        folder_id='default',
-                       is_publish=True,
+                       is_publish=True if application.get('type') == 'SIMPLE' else False,
                        name=application.get('name'),
                        desc=application.get('desc'),
                        prologue=application.get('prologue'),
@@ -55,7 +74,7 @@ def to_v2_application(application):
                        model_params_setting=application.get('model_params_setting'),
                        tts_model_params_setting=application.get('tts_model_params_setting'),
                        problem_optimization=application.get('problem_optimization'),
-                       icon=application.get('icon'),
+                       icon=to_v2_icon(application.get('icon'), application.get('id')),
                        work_flow=application.get('work_flow'),
                        type=application.get('type'),
                        problem_optimization_prompt=application.get('problem_optimization_prompt'),
@@ -78,7 +97,191 @@ def application_import(file_list, source_name, current_page):
     for file in file_list:
         application_list = pickle.loads(file.read_bytes())
         application_model_list = [to_v2_application(app) for app in application_list]
+        # 删除数据
+        QuerySet(Application).filter(id__in=[app.id for app in application_model_list]).delete()
+        # 插入应用配置
         QuerySet(Application).bulk_create(application_model_list)
+        simple_app_version_list = [to_v2_simple_application_version(app) for app in application_model_list if
+                                   app.type == 'SIMPLE']
+        # 删除数据
+        QuerySet(ApplicationVersion).filter(
+            id__in=[simple_app_version.id for simple_app_version in simple_app_version_list])
+        # 插入简易版本发布信息
+        QuerySet(ApplicationVersion).bulk_create(simple_app_version_list)
+        rename(file)
+
+
+def to_v2_simple_application_version(application):
+    application_version = ApplicationVersion(work_flow=application.work_flow, application=application,
+                                             name=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                             publish_user_id=application.user.id,
+                                             publish_user_name=application.user.username,
+                                             workspace_id='default')
+    ApplicationOperateSerializer.reset_application_version(application_version, application)
+    return application_version
+
+
+def to_v2_application_version(application_version, application_dict):
+    application = application_dict.get(application_version.get('application'))
+    if application is None:
+        return None
+    application_model_version = ApplicationVersion(id=application_version.get('id')
+                                                   , application_id=application_version.get('application'),
+                                                   name=application_version.get('name'),
+                                                   publish_user_id=application_version.get('publish_user_id'),
+                                                   publish_user_name=application_version.get('publish_user_name'),
+                                                   work_flow=application_version.get('work_flow'),
+                                                   )
+    ApplicationOperateSerializer.reset_application_version(application_model_version, application)
+    return application_model_version
+
+
+def application_version_import(file_list, source_name, current_page):
+    for file in file_list:
+        application_version_list = pickle.loads(file.read_bytes())
+        # 查询到对应的应用
+        application_list = QuerySet(Application).filter(
+            id__in=list(
+                set([application_version.get('application') for application_version in application_version_list])))
+        # 根据id分组
+        application_dict = {app.id: app for app in application_list}
+        # 转换为v2的application_version
+        app_version_list = [a_v for a_v in [to_v2_application_version(app_version, application_dict) for app_version in
+                                            application_version_list] if a_v is not None]
+        # 删除数据
+        QuerySet(ApplicationVersion).filter(id__in=[app_version.id for app_version in app_version_list]).delete()
+        # 插入数据
+        QuerySet(ApplicationVersion).bulk_create(app_version_list)
+        rename(file)
+
+
+def to_v2_application_api_key(application_api_key):
+    return ApplicationApiKey(
+        id=application_api_key.get('id'),
+        secret_key=application_api_key.get('secret_key'),
+        user_id=application_api_key.get('user'),
+        application_id=application_api_key.get('application'),
+        is_active=application_api_key.get('is_active'),
+        allow_cross_domain=application_api_key.get('allow_cross_domain'),
+        cross_domain_list=application_api_key.get('cross_domain_list'),
+        workspace_id='default'
+    )
+
+
+def application_api_key_import(file_list, source_name, current_page):
+    for file in file_list:
+        application_api_key_list = pickle.loads(file.read_bytes())
+        application_api_key_model_list = [to_v2_application_api_key(application_api_key) for application_api_key in
+                                          application_api_key_list]
+        QuerySet(ApplicationApiKey).filter(id__in=[a.id for a in application_api_key_model_list]).delete()
+
+        QuerySet(ApplicationApiKey).bulk_create(application_api_key_model_list)
+        rename(file)
+
+
+def to_v2_application_access_token(application_access_token):
+    return ApplicationAccessToken(
+        application_id=application_access_token.get('application'),
+        access_token=application_access_token.get('access_token'),
+        is_active=application_access_token.get('is_active'),
+        access_num=application_access_token.get('access_num'),
+        white_active=application_access_token.get('white_active'),
+        white_list=application_access_token.get('white_list'),
+        show_source=application_access_token.get('show_source'),
+        show_exec=False,
+        authentication=False,
+        authentication_value={},
+        language=application_access_token.get('language')
+    )
+
+
+def application_access_token_import(file_list, source_name, current_page):
+    for file in file_list:
+        application_access_token_list = pickle.loads(file.read_bytes())
+        application_access_token_model_list = [to_v2_application_access_token(application_access_token) for
+                                               application_access_token in application_access_token_list]
+        # 删除
+        QuerySet(ApplicationAccessToken).filter(
+            application_id__in=[application_access_token_model.application_id for application_access_token_model in
+                                application_access_token_model_list]).delete()
+        # 插入数据
+        QuerySet(ApplicationAccessToken).bulk_create(application_access_token_model_list)
+        rename(file)
+
+
+def to_v2_application_chat_user_stats(application_public_access_client):
+    return ApplicationChatUserStats(
+        id=application_public_access_client.get('id'),
+        chat_user_id=application_public_access_client.get('client_id'),
+        chat_user_type="ANONYMOUS_USER",
+        application_id=application_public_access_client.get('application'),
+        access_num=application_public_access_client.get('access_num'),
+        intraday_access_num=application_public_access_client.get('intraday_access_num')
+    )
+
+
+def application_public_access_client_import(file_list, source_name, current_page):
+    for file in file_list:
+        application_public_access_client_list = pickle.loads(file.read_bytes())
+        application_chat_user_stats_model_list = [
+            to_v2_application_chat_user_stats(application_public_access_client) for application_public_access_client in
+            application_public_access_client_list]
+        QuerySet(ApplicationChatUserStats).filter(
+            id__in=[application_chat_user_stats_model.id for application_chat_user_stats_model in
+                    application_chat_user_stats_model_list]).delete()
+        QuerySet(ApplicationChatUserStats).bulk_create(application_chat_user_stats_model_list)
+        rename(file)
+
+
+def to_v2_chat(chat):
+    return Chat(id=chat.get('id'),
+                application_id=chat.get('application'),
+                abstract=chat.get('abstract'),
+                chat_user_id=chat.get('client_id'),
+                chat_user_type='ANONYMOUS_USER',
+                asker=chat.get('asker'),
+                is_deleted=chat.get('is_deleted'),
+                meta={},
+                star_num=0,
+                trample_num=0,
+                chat_record_count=0,
+                mark_sum=0)
+
+
+def application_chat_import(file_list, source_name, current_page):
+    for file in file_list:
+        chat_list = pickle.loads(file.read_bytes())
+        chat_model_list = [to_v2_chat(chat) for chat in chat_list]
+        QuerySet(Chat).filter(id__in=[chat_model.id for chat_model in chat_model_list]).delete()
+        QuerySet(Chat).bulk_create(chat_model_list)
+        rename(file)
+
+
+def to_v2_chat_record(chat_record):
+    return ChatRecord(
+        id=chat_record.get('id'),
+        chat_id=chat_record.get('chat'),
+        vote_status=chat_record.get('vote_status'),
+        problem_text=chat_record.get('problem_text'),
+        answer_text=chat_record.get('answer_text'),
+        answer_text_list=chat_record.get('answer_text_list'),
+        message_tokens=chat_record.get('message_tokens'),
+        answer_tokens=chat_record.get('answer_tokens'),
+        const=chat_record.get('const'),
+        details=chat_record.get('details'),
+        improve_paragraph_id_list=chat_record.get('improve_paragraph_id_list'),
+        run_time=chat_record.get('run_time'),
+        index=chat_record.get('index')
+    )
+
+
+def application_chat_record_import(file_list, source_name, current_page):
+    for file in file_list:
+        chat_record_list = pickle.loads(file.read_bytes())
+        chat_record_model_list = [to_v2_chat_record(chat_record) for chat_record in chat_record_list]
+        QuerySet(ChatRecord).filter(
+            id__in=[chat_record_model.id for chat_record_model in chat_record_model_list]).delete()
+        QuerySet(ChatRecord).bulk_create(chat_record_model_list)
         rename(file)
 
 
@@ -90,3 +293,22 @@ def check_application_folder():
 def import_():
     check_application_folder()
     page(ImportQuerySet('application'), 1, application_import, "application", "导入应用", check=import_check)
+    page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version', "导入应用版本",
+         check=import_check)
+    page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key', "导入应用api key",
+         check=import_check)
+    page(ImportQuerySet('application_access_token'), 1, application_access_token_import, 'application_access_token',
+         "导入应用访问限制配置",
+         check=import_check)
+    page(ImportQuerySet('application_public_access_client'), 1, application_public_access_client_import,
+         'application_public_access_client',
+         "导入应用客户端信息",
+         check=import_check)
+    page(ImportQuerySet('chat'), 1, application_chat_import,
+         'chat',
+         "导入对话日志",
+         check=import_check)
+    page(ImportQuerySet('chat_record'), 1, application_chat_record_import,
+         'chat_record',
+         "导入对话日志记录",
+         check=import_check)

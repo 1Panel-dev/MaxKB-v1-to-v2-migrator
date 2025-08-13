@@ -57,7 +57,7 @@ def user_import(file_list, source_name, current_page):
         user_list = pickle.loads(file.read_bytes())
         user_model_list = [to_v2_user(user) for user in user_list]
         # 删除数据
-        QuerySet(User).filter(id_in=[u.id for u in user_model_list]).delete()
+        QuerySet(User).filter(id__in=[u.id for u in user_model_list]).delete()
         # 插入数据
         QuerySet(User).bulk_create(user_model_list)
         # 修改标识
@@ -69,7 +69,7 @@ def model_import(file_list, source_name, current_page):
         model_list = pickle.loads(file.read_bytes())
         model_model_list = [to_v2_model(model) for model in model_list]
         # 删除数据
-        QuerySet(SystemSetting).filter(id_in=[m.id for m in model_model_list]).delete()
+        QuerySet(Model).filter(id__in=[m.id for m in model_model_list]).delete()
         # 插入数据
         QuerySet(Model).bulk_create(model_model_list)
         # 修改标识
@@ -82,7 +82,7 @@ def system_setting_import(file_list, source_name, current_page):
         system_setting_model_list = [to_v2_system_setting_model(system_setting) for system_setting in
                                      system_setting_list]
         # 删除数据
-        QuerySet(SystemSetting).filter(type_in=[s.type for s in system_setting_model_list]).delete()
+        QuerySet(SystemSetting).filter(type__in=[s.type for s in system_setting_model_list]).delete()
         # 插入数据
         QuerySet(SystemSetting).bulk_create(system_setting_model_list)
         # 修改标识
