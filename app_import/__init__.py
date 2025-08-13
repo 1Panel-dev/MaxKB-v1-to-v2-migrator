@@ -19,8 +19,12 @@ def app_import():
     from .application_import import import_ as application_import
     from .setting_import import import_ as setting_import
     from .file_import import import_ as file_import
+    from .knowledge_import import import_ as knowledge_import
+    from .tool_import import import_ as tool_import
+
     un_zip()
     file_import()
     setting_import()
     application_import()
-
+    knowledge_import()
+    tool_import()
