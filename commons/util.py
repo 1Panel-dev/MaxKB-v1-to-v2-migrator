@@ -15,7 +15,7 @@ from tqdm import tqdm
 import pickle
 import shutil
 
-from migrate import BASE_DIR
+from migrate import BASE_DIR, APP_DIR
 
 source_dir_size = 1000
 
@@ -120,3 +120,10 @@ def un_zip():
     extract_dir.mkdir(exist_ok=True)
     with zipfile.ZipFile(zip_name, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
+
+def contains_xpack():
+    dir_path = Path(f"{APP_DIR}/")
+    for source in dir_path.iterdir():
+        if source.is_dir() and source.name.startswith("xpack"):
+            return True
+    return False

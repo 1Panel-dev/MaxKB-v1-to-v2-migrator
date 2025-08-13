@@ -7,7 +7,6 @@
     @desc:
 """
 import os
-
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartdoc.settings')
@@ -20,9 +19,18 @@ def export():
     from .setting_export import export as setting_export
     from .function_lib import export as function_export
     from commons.util import zip_folder
+    from commons.util import contains_xpack
 
     _export()
     knowledge_export()
     function_export()
     setting_export()
     zip_folder()
+
+    if contains_xpack():
+        from xpack.serializers.license_serializers import LicenseSerializers
+        from smartdoc.urls import xpack_cache
+        LicenseSerializers().refresh()
+        if xpack_cache.set('XPACK_LICENSE_IS_VALID', False, None):
+            from .xpack_export import export as xpack_export
+            xpack_export()
