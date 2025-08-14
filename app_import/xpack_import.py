@@ -14,7 +14,7 @@ import uuid_utils.compat as uuid
 from application.models import ApplicationAccessToken
 from commons.util import page, ImportQuerySet, import_check, rename
 from knowledge.models import File, FileSourceType
-from system_manage.models import SystemSetting
+from maxkb.const import CONFIG
 from xpack.models import PlatformUser, SystemApiKey, PlatformSource, SystemParams
 from xpack.models.application_setting import ApplicationSetting
 from xpack.models.platform import Platform
@@ -199,12 +199,31 @@ def system_params_import(system_params_list, source_name, current_page):
         rename(system_params)
 
 
+def update_redirect_urls(config_data):
+    """
+    更新配置中的重定向URL路径
+    """
+    admin_api_path = f'{CONFIG.get_admin_path()}/api/'
+
+    if config_data:
+        redirect_keys = ['redirectUrl', 'callback_url']
+        for key in redirect_keys:
+            if key in config_data and isinstance(config_data[key], str):
+                if config_data[key].endswith('/feishu'):
+                    config_data[key] = config_data[key].replace('/feishu', '/lark')
+                config_data[key] = config_data[key].replace('/api/', admin_api_path)
+    return config_data
+
+
 def to_v2_auth_config(auth_config):
+    config_data = auth_config.get('config_data', {})
+    # 更新重定向URL路径
+    config_data = update_redirect_urls(config_data)
     auth_config_obj = PlatformSource(
         id=auth_config.get('id'),
         auth_type=auth_config.get('auth_type'),
         type='SSO',
-        config=auth_config.get('config_data'),
+        config=config_data,
         is_active=auth_config.get('is_active'),
         is_valid=auth_config.get('is_valid', True)
     )
@@ -225,12 +244,15 @@ def auth_config_import(auth_config_list, source_name, current_page):
 
 
 def to_v2_platform_source(platform_source):
+    config_data = platform_source.get('config_data', {})
+    # 更新重定向URL路径
+    config_data = update_redirect_urls(config_data)
     id = uuid.uuid7()
     platform_source_obj = PlatformSource(
         id=id,
         auth_type=platform_source.get('platform'),
         type='SCAN',
-        config=platform_source.get('config'),
+        config=config_data,
         is_active=platform_source.get('is_active'),
         is_valid=platform_source.get('is_valid', True),
         create_time=platform_source.get('create_time'),
