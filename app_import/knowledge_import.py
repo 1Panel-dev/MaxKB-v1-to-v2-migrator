@@ -43,7 +43,7 @@ def to_v2_document(instance):
 def to_v2_problem(instance):
     return Problem(
         id=instance.get('id'),
-        knowledge=instance.get('dataset'),
+        knowledge_id=instance.get('dataset'),
         content=instance.get('content'),
         hit_num=instance.get('hit_num'),
     )
@@ -54,8 +54,8 @@ def to_v2_problem_paragraph_mapping(instance):
         id=instance.get('id'),
         knowledge_id=instance.get('dataset'),
         document_id=instance.get('document'),
-        problem=instance.get('problem'),
-        paragraph=instance.get('paragraph'),
+        problem_id=instance.get('problem'),
+        paragraph_id=instance.get('paragraph'),
     )
 
 
