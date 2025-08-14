@@ -23,8 +23,10 @@ def app_import():
     from .tool_import import import_ as tool_import
 
     un_zip()
-    file_import()
+    # file_import()
     setting_import()
     application_import()
-    knowledge_import()
-    tool_import()
+    # knowledge_import()
+    # tool_import()
+    from .xpack_import import import_ as xpack_import
+    xpack_import()

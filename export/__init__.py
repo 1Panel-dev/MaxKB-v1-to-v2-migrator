@@ -25,7 +25,6 @@ def export():
     knowledge_export()
     function_export()
     setting_export()
-    zip_folder()
 
     if contains_xpack():
         from xpack.serializers.license_serializers import LicenseSerializers
@@ -34,3 +33,5 @@ def export():
         if xpack_cache.set('XPACK_LICENSE_IS_VALID', False, None):
             from .xpack_export import export as xpack_export
             xpack_export()
+
+    zip_folder()
