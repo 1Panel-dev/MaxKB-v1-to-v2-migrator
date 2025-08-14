@@ -12,12 +12,16 @@ import pickle
 import uuid_utils.compat as uuid
 
 from application.models import ApplicationAccessToken
+from common.constants.permission_constants import RoleConstants
 from commons.util import page, ImportQuerySet, import_check, rename
 from knowledge.models import File, FileSourceType
 from maxkb.const import CONFIG
+from role_setting.models import UserRoleRelation
+from users.models import User
 from xpack.models import PlatformUser, SystemApiKey, PlatformSource, SystemParams
 from xpack.models.application_setting import ApplicationSetting
 from xpack.models.platform import Platform
+from system_manage.models import Log
 
 
 def convert_image_path(image_path):
@@ -274,6 +278,62 @@ def platform_source_import(platform_source_list, source_name, current_page):
         rename(platform_source)
 
 
+def import_user_relation():
+    user_list = User.objects.all()
+    user_role_relations = []
+
+    # 判断用户，如果是默认的admin需要加管理员权限，其他加普通用户权限
+    for user in user_list:
+        if str(user.id) == 'f0dd8f71-e4ee-11ee-8c84-a8a1595801ab':
+            roles_to_assign = [
+                RoleConstants.ADMIN.name,
+                RoleConstants.USER.name,
+                RoleConstants.WORKSPACE_MANAGE.name
+            ]
+        else:
+            roles_to_assign = [RoleConstants.USER.name]
+
+        for role_id in roles_to_assign:
+            user_role_relations.append(UserRoleRelation(
+                id=uuid.uuid7(),
+                user_id=user.id,
+                role_id=role_id,
+                workspace_id='default'
+            ))
+    if user_role_relations:
+        UserRoleRelation.objects.bulk_create(user_role_relations, ignore_conflicts=True)
+
+
+def to_v2_log(log):
+    log_obj = Log(
+        id=log.get('id'),
+        user_id=log.get('user'),
+        workspace_id='default',
+        menu=log.get('menu'),
+        operate=log.get('operate'),
+        operation_object=log.get('operation_object'),
+        status=log.get('status'),
+        ip_address=log.get('ip_address'),
+        details=log.get('details'),
+        create_time=log.get('create_time'),
+        update_time=log.get('update_time'),
+    )
+    return log_obj
+
+
+def log_import(log_list, source_name, current_page):
+    for log in log_list:
+        log_list = pickle.loads(log.read_bytes())
+        log_model_list = [to_v2_log(log) for log in
+                          log_list]
+        # 删除数据
+        Log.objects.all().delete()
+        # 插入数据
+        Log.objects.bulk_create(log_model_list)
+        # 修改标识
+        rename(log)
+
+
 def import_():
     page(ImportQuerySet('application_setting'), 1, application_setting_import, "application_setting", "导入应用设置",
          check=import_check)
@@ -286,3 +346,5 @@ def import_():
     page(ImportQuerySet('system_api_key'), 1, system_api_key_import, "system_api_key", "导入系统api密钥",
          check=import_check)
     page(ImportQuerySet('system_params'), 1, system_params_import, "system_params", "导入系统参数", check=import_check)
+    import_user_relation()
+    page(ImportQuerySet('log'), 1, log_import, "log", "导入操作日志", check=import_check)
