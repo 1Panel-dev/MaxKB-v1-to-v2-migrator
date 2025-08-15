@@ -6,13 +6,16 @@
     @date：2025/8/12 10:26
     @desc:
 """
+import json
 import pickle
 
 from django.db.models import QuerySet
 
+from common.constants.permission_constants import ResourcePermission, ResourceAuthType
+from common.utils.rsa_util import rsa_long_decrypt, rsa_long_encrypt
 from commons.util import page, ImportQuerySet, import_check, rename
 from models_provider.models import Model
-from system_manage.models import SystemSetting
+from system_manage.models import SystemSetting, AuthTargetType, WorkspaceUserResourcePermission
 from users.models import User
 
 
@@ -29,20 +32,6 @@ def to_v2_user(user):
                 language=user.get('language'),
                 create_time=user.get('create_time'),
                 update_time=user.get('update_time'))
-
-
-def to_v2_model(model):
-    return Model(id=model.get('id'),
-                 name=model.get('name'),
-                 status=model.get('status'),
-                 model_type=model.get('model_type'),
-                 model_name=model.get('model_name'),
-                 user_id=model.get('user'),
-                 provider=model.get('provider'),
-                 credential=model.get('credential'),
-                 meta=model.get('meta'),
-                 model_params_form=model.get('model_params_form'),
-                 workspace_id='default')
 
 
 def to_v2_system_setting_model(system_setting):
@@ -62,6 +51,100 @@ def user_import(file_list, source_name, current_page):
         QuerySet(User).bulk_create(user_model_list)
         # 修改标识
         rename(file)
+
+
+def update_qwen_model(model):
+    """处理通义千问模型到阿里云百炼的转换"""
+    if model.get('provider') == 'model_qwen_provider':
+        model['provider'] = 'aliyun_bai_lian_model_provider'
+        if model.get('credential') and model.get('model_type') == 'LLM':
+            credential = json.loads(rsa_long_decrypt(model.get('credential')))
+            model['credential'] = json.dumps({
+                'api_base': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                'api_key': credential.get('api_key'),
+            })
+            model['credential'] = rsa_long_encrypt(model['credential'])
+
+    if model.get('type') == 'model_local_provider' and model.get('credential'):
+        credential = json.loads(rsa_long_decrypt(model.get('credential')))
+        cache_path = None
+
+        if model.get('model_type') == 'EMBEDDING':
+            cache_path = credential.get('cache_folder')
+        elif model.get('model_type') == 'RERANKER':
+            cache_path = credential.get('cache_dir')
+
+        if cache_path and cache_path.startswith('/opt/maxkb/'):
+            cache_path = cache_path.replace('/opt/maxkb/', '/opt/maxkb-app/')
+
+        if model.get('model_type') == 'EMBEDDING':
+            model['credential'] = json.dumps({'cache_folder': cache_path})
+        elif model.get('model_type') == 'RERANKER':
+            model['credential'] = json.dumps({'cache_dir': cache_path})
+
+        model['credential'] = rsa_long_encrypt(model['credential'])
+
+    return model
+
+
+def create_model_permissions(model, model_id):
+    permissions_to_create = []
+    creator_permission = WorkspaceUserResourcePermission(
+        target=model_id,
+        auth_target_type=AuthTargetType.MODEL,
+        permission_list=[ResourcePermission.VIEW, ResourcePermission.MANAGE],
+        workspace_id='default',
+        user_id=model.get('user'),
+        auth_type=ResourceAuthType.RESOURCE_PERMISSION_GROUP
+    )
+    permissions_to_create.append(creator_permission)
+
+    if model.get('permission') == 'PUBLIC':
+        users = User.objects.exclude(id=model.get('user')).values_list('id', flat=True)
+        for user_id in users:
+            public_permission = WorkspaceUserResourcePermission(
+                target=model_id,
+                auth_target_type=AuthTargetType.MODEL,
+                permission_list=[ResourcePermission.VIEW],
+                workspace_id='default',
+                user_id=user_id,
+                auth_type=ResourceAuthType.RESOURCE_PERMISSION_GROUP
+            )
+            permissions_to_create.append(public_permission)
+
+    if permissions_to_create:
+        WorkspaceUserResourcePermission.objects.bulk_create(permissions_to_create)
+
+
+def to_v2_model(model):
+    """
+    模型迁移逻辑：
+    1. 私有权限的工具只有创建者有"管理"权限，其他用户未授权；
+    2. 公有权限的工具创建者有"管理"权限；其他所有工作空间用户有"查看"权限；
+    3. "通义千问"模型迁移后变为"阿里云百炼"对应的模型；
+    4. 本地模型迁移直接迁移。V2和V1目录一致
+    """
+    # 处理通义千问模型转换
+    model = update_qwen_model(model)
+
+    model_obj = Model(id=model.get('id'),
+                      name=model.get('name'),
+                      status=model.get('status'),
+                      model_type=model.get('model_type'),
+                      model_name=model.get('model_name'),
+                      user_id=model.get('user'),
+                      provider=model.get('provider'),
+                      credential=model.get('credential'),
+                      meta=model.get('meta'),
+                      model_params_form=model.get('model_params_form'),
+                      create_time=model.get('create_time'),
+                      update_time=model.get('update_time'),
+                      workspace_id='default')
+
+    # 创建相应权限
+    create_model_permissions(model, model_obj.id)
+
+    return model_obj
 
 
 def model_import(file_list, source_name, current_page):
