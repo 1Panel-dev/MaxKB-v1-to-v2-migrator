@@ -294,15 +294,17 @@ def import_user_relation():
             roles_to_assign = [RoleConstants.USER.name]
 
         for role_id in roles_to_assign:
+            workspace_id = 'default'
+            if str(user.id) == 'f0dd8f71-e4ee-11ee-8c84-a8a1595801ab' and role_id == RoleConstants.ADMIN.name:
+                workspace_id = 'None'
             user_role_relations.append(UserRoleRelation(
                 id=uuid.uuid7(),
                 user_id=user.id,
                 role_id=role_id,
-                workspace_id='default'
+                workspace_id=workspace_id
             ))
     if user_role_relations:
         UserRoleRelation.objects.bulk_create(user_role_relations, ignore_conflicts=True)
-
 
 def to_v2_log(log):
     log_obj = Log(
