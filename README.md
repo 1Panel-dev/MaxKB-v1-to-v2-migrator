@@ -20,37 +20,21 @@ ________________________________________________________________________________
 
 ## 迁移操作步骤
 
-1. **查找容器名称**
+1. **导出v1数据*
    ```bash
-   docker ps  # 查看运行中的容器
+   # 在v1机器上下载v1-to-v2-migrator
+   cd v1-to-v2-migrator
+   bash export_v1_data.sh <v1_container_name>
+
+   # 执行后v1-to-v2-migrator中会多一个migrate.zip
+   # 将v1-to-v2-migrator复制到v2所在的机器上
    ```
 
-2. **复制迁移工具到 v1 容器**
+2. **数据导入至v2**
    ```bash
-   docker cp . <v1_container_name>:/opt/maxkb/app/v1-to-v2-migrator
+   cd v1-to-v2-migrator
+   bash import_v2_data.sh <v2_container_name>
    ```
-
-3. **在 v1 容器中导出数据**
-   ```bash
-   docker exec -w /opt/maxkb/app/v1-to-v2-migrator <v1_container_name> python migrate.py export
-   ```
-
-4. **复制数据到主机**
-   ```bash
-   docker cp <v1_container_name>:/opt/maxkb/app/v1-to-v2-migrator/migrate.zip ./migrate.zip
-   ```
-
-5. **复制工具和数据到 v2 容器**
-   ```bash
-   docker cp . <v2_container_name>:/opt/maxkb-app/v1-to-v2-migrator
-   docker cp ./migrate.zip <v2_container_name>:/opt/maxkb-app/v1-to-v2-migrator/
-   ```
-
-6. **在 v2 容器中导入数据**
-   ```bash
-   docker exec -w /opt/maxkb/v1-to-v2-migrator <v2_container_name> python migrate.py import
-   ```
-
 
 ## FAQ
 - v1.10.10-lts之前的版本可以直接迁移到v2么？  
