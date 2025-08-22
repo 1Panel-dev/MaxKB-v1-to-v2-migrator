@@ -27,17 +27,17 @@ ________________________________________________________________________________
 
 2. **复制迁移工具到 v1 容器**
    ```bash
-   docker cp . <v1_container_name>:/opt/maxkb/v1-to-v2-migrator
+   docker cp . <v1_container_name>:/opt/maxkb/app/v1-to-v2-migrator
    ```
 
 3. **在 v1 容器中导出数据**
    ```bash
-   docker exec -w /opt/maxkb/v1-to-v2-migrator <v1_container_name> python migrate.py export
+   docker exec -w /opt/maxkb/app/v1-to-v2-migrator <v1_container_name> python migrate.py export
    ```
 
 4. **复制数据到主机**
    ```bash
-   docker cp <v1_container_name>:/opt/maxkb/v1-to-v2-migrator/migrate.zip ./migrate.zip
+   docker cp <v1_container_name>:/opt/maxkb/app/v1-to-v2-migrator/migrate.zip ./migrate.zip
    ```
 
 5. **复制工具和数据到 v2 容器**
