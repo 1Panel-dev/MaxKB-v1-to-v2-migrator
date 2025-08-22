@@ -307,7 +307,7 @@ def import_user_relation():
 def to_v2_log(log):
     log_obj = Log(
         id=log.get('id'),
-        user_id=log.get('user'),
+        user=log.get('user'),
         workspace_id='default',
         menu=log.get('menu'),
         operate=log.get('operate'),

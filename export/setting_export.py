@@ -68,7 +68,25 @@ def team_member_permission_export(team_member_permission_list, source_name, curr
 
 
 def user_export(user_list, source_name, current_page):
-    batch_list = [UserModel(user).data for user in user_list]
+    nick_name_count = {}
+
+    batch_list = []
+    for user in user_list:
+        user_data = UserModel(user).data
+
+        # 如果 nick_name 不存在，则使用 username 填充
+        if not user_data.get('nick_name'):
+            user_data['nick_name'] = user_data['username']
+
+        original_nick_name = user_data['nick_name']
+        # 处理 nick_name 重复问题
+        if original_nick_name in nick_name_count:
+            nick_name_count[original_nick_name] += 1
+            user_data['nick_name'] = f"{original_nick_name}{nick_name_count[original_nick_name]}"
+        else:
+            nick_name_count[original_nick_name] = 0
+
+        batch_list.append(user_data)
     save_batch_file(batch_list, source_name, current_page)
 
 
