@@ -65,7 +65,7 @@ def update_qwen_model(model):
             })
             model['credential'] = rsa_long_encrypt(model['credential'])
 
-    if model.get('type') == 'model_local_provider' and model.get('credential'):
+    if model.get('provider') == 'model_local_provider' and model.get('credential'):
         credential = json.loads(rsa_long_decrypt(model.get('credential')))
         cache_path = None
 
