@@ -63,4 +63,5 @@ echo -e "${GREEN}[完成]${NC} 数据文件已保存到: ./migrate.zip"
 echo
 echo -e "${GREEN}[成功]${NC} v1数据导出完成!"
 echo "[文件] 导出文件: ./migrate.zip"
-echo -e "${YELLOW}[提示]${NC} 下一步: 请将migrate.zip和迁移工具复制到v2容器中进行导入
+echo -e "${YELLOW}[提示]${NC} 下一步: 请将migrate.zip和迁移工具复制到v2容器中进行导入"
+echo
