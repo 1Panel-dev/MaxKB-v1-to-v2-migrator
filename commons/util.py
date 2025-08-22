@@ -7,8 +7,9 @@
     @desc:
 """
 import os
+import re
 import zipfile
-from math import ceil, floor
+from math import ceil
 from pathlib import Path
 
 from tqdm import tqdm
@@ -128,3 +129,13 @@ def contains_xpack():
         if source.is_dir() and source.name.startswith("xpack"):
             return True
     return False
+
+def base_version(version: str) -> str:
+    """
+    从形如 'v1.10.10-lts (build ...)' 提取基础版本 'v1.10.10-lts'
+    """
+    if not version:
+        return ''
+    m = re.match(r'^\s*(v[\w\.\-]+)', version)
+    return m.group(1) if m else version.strip().split()[0]
+

@@ -9,6 +9,7 @@
 import os
 import django
 
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartdoc.settings')
 django.setup()
 
@@ -20,6 +21,13 @@ def export():
     from .function_lib import export as function_export
     from commons.util import zip_folder
     from commons.util import contains_xpack
+    from commons.util import base_version
+
+    # 只能导出 v1.10.10-lts (build at 2025-08-21T13:49, commit: 4c878b0)
+    version = os.environ.get('MAXKB_VERSION', '')
+    if base_version(version) != 'v1.10.10-lts':
+        print(f"当前版本 {version} 不是 v1.10.10-lts 版本，不能导出数据！")
+        return
 
     _export()
     knowledge_export()

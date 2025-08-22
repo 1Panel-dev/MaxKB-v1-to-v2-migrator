@@ -89,13 +89,13 @@ def problem_paragraph_mapping_export(problem_paragraph_mapping_list, source_name
 
 
 def image_export(image_list, source_name, current_page):
-    batch_data = [{**ImageModel(image).data, 'image_data': image.image.tobytes()} for image in
+    batch_data = [{**ImageModel(image).data, 'image_data': image.image} for image in
                   image_list]
     save_batch_file(batch_data, source_name, current_page)
 
 
 def file_export(file_list, source_name, current_page):
-    batch_data = [{**FileModel(file).data, 'content': file.get_byte().tobytes()} for file in
+    batch_data = [{**FileModel(file).data, 'content': file.get_byte()} for file in
                   file_list]
     save_batch_file(batch_data, source_name, current_page)
 
