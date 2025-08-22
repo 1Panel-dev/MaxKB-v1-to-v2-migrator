@@ -19,10 +19,38 @@ ________________________________________________________________________________
 ❗ 重要：此工具只支持 v1.10.10-lts 的数据迁移到 v2.1.0 。
 
 ## 迁移操作步骤
-1. 准备好升级至v1.10.10-lts并且运行正常的v1环境，做好备份
-2. 准备好新安装的v2.1.0
-3. 使用此工具进行如下操作  
-TODO：待细化(把迁移工具docker cp到v1的容器中，执行export，把导出的数据和迁移工具docker cp到v2的容器中，执行import)
+
+1. **查找容器名称**
+   ```bash
+   docker ps  # 查看运行中的容器
+   ```
+
+2. **复制迁移工具到 v1 容器**
+   ```bash
+   docker cp . <v1_container_name>:/opt/maxkb/v1-to-v2-migrator
+   ```
+
+3. **在 v1 容器中导出数据**
+   ```bash
+   docker exec -w /opt/maxkb/v1-to-v2-migrator <v1_container_name> python migrate.py export
+   ```
+
+4. **复制数据到主机**
+   ```bash
+   docker cp <v1_container_name>:/opt/maxkb/v1-to-v2-migrator/migrate.zip ./migrate.zip
+   ```
+
+5. **复制工具和数据到 v2 容器**
+   ```bash
+   docker cp . <v2_container_name>:/opt/maxkb-app/v1-to-v2-migrator
+   docker cp ./migrate.zip <v2_container_name>:/opt/maxkb-app/v1-to-v2-migrator/
+   ```
+
+6. **在 v2 容器中导入数据**
+   ```bash
+   docker exec -w /opt/maxkb/v1-to-v2-migrator <v2_container_name> python migrate.py import
+   ```
+
 
 ## FAQ
 - v1.10.10-lts之前的版本可以直接迁移到v2么？  
