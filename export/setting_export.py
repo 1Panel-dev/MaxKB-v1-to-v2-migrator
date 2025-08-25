@@ -10,7 +10,7 @@
 from django.db.models import QuerySet
 from rest_framework import serializers
 
-from setting.models import Model, SystemSetting, TeamMemberPermission
+from setting.models import Model, SystemSetting, TeamMemberPermission, TeamMember
 from setting.models.log_management import Log
 from users.models import User
 from commons.util import page, save_batch_file
@@ -61,8 +61,20 @@ def system_setting_export(system_setting_list, source_name, current_page):
     save_batch_file(batch_list, source_name, current_page)
 
 
+def reset_team_member_permission_model(team_member_permission, team_member_dict):
+    team_member = team_member_dict.get(team_member_permission.member_id)
+    if team_member is not None:
+        return {**TeamMemberPermissionModel(team_member_permission).data,
+                'user_id': team_member.user_id,
+                'team_id': team_member.team_id}
+    return TeamMemberPermissionModel(team_member_permission).data
+
+
 def team_member_permission_export(team_member_permission_list, source_name, current_page):
-    batch_list = [TeamMemberPermissionModel(team_member_permission).data for team_member_permission in
+    team_member_dict = {team_member.id: team_member for team_member in QuerySet(TeamMember).filter(
+        id__in=[team_member_permission.member_id for team_member_permission in team_member_permission_list])}
+    batch_list = [reset_team_member_permission_model(team_member_permission, team_member_dict) for
+                  team_member_permission in
                   team_member_permission_list]
     save_batch_file(batch_list, source_name, current_page)
 

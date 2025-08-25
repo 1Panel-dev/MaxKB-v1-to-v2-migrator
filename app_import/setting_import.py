@@ -172,8 +172,45 @@ def system_setting_import(file_list, source_name, current_page):
         rename(file)
 
 
+def reset_permission_list(operate):
+    return ['VIEW' if o == 'USE' else 'MANAGE' for o in operate if ['USE', 'MANAGE'].__contains__(o)]
+
+
+def to_v2_workspace_user_resource_permission(team_member_permission):
+    user_id = team_member_permission.get('user_id')
+    if user_id is None:
+        return None
+    return WorkspaceUserResourcePermission(id=team_member_permission.get('id'),
+                                           workspace_id='default',
+                                           user_id=team_member_permission.get('user_id'),
+                                           auth_target_type='KNOWLEDGE' if team_member_permission.get(
+                                               'auth_target_type') == 'DATASET' else 'APPLICATION',
+                                           target=team_member_permission.get('target'),
+                                           auth_type='RESOURCE_PERMISSION_GROUP',
+                                           permission_list=reset_permission_list(
+                                               team_member_permission.get('operate', [])))
+
+
+def team_member_permission_import(file_list, source_name, current_page):
+    for file in file_list:
+        team_member_permission_list = pickle.loads(file.read_bytes())
+        workspace_user_resource_permission_model_list = [i for i in [
+            to_v2_workspace_user_resource_permission(team_member_permission) for team_member_permission in
+            team_member_permission_list] if i is not None]
+        # 删除数据
+        QuerySet(WorkspaceUserResourcePermission).filter(
+            id__in=[wur.id for wur in workspace_user_resource_permission_model_list]).delete()
+
+        # 插入数据
+        QuerySet(WorkspaceUserResourcePermission).bulk_create(workspace_user_resource_permission_model_list)
+        # 修改标识
+        rename(file)
+
+
 def import_():
     page(ImportQuerySet('system_setting'), 1, system_setting_import, "system_setting", "导入系统设置",
          check=import_check)
     page(ImportQuerySet('user'), 1, user_import, "user", "导入用户", check=import_check)
     page(ImportQuerySet('model'), 1, model_import, "model", "导入模型", check=import_check)
+    page(ImportQuerySet("team_member_permission"), 1, team_member_permission_import, 'team_member_permission',
+         '导入授权', check=import_check)
