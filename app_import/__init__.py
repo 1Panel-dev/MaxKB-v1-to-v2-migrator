@@ -54,5 +54,6 @@ def app_import():
     application_import()
     knowledge_import()
     tool_import()
-    from .xpack_import import import_ as xpack_import
-    xpack_import()
+    if contains_xpack():
+        from .xpack_import import import_ as xpack_import
+        xpack_import()
