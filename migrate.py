@@ -9,11 +9,14 @@
 import argparse
 import os
 import sys
+import warnings
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_DIR = os.path.join(os.path.dirname(BASE_DIR), 'apps')
 os.chdir(BASE_DIR)
 sys.path.insert(0, APP_DIR)
+
+warnings.filterwarnings("ignore", category=UserWarning, module="drf_yasg")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
