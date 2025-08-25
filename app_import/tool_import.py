@@ -50,3 +50,7 @@ def import_():
     check_tool_folder()
 
     page(ImportQuerySet('function_lib'), 1, tool_import, "function_lib", "导入工具", check=import_check)
+
+
+def check_tool_empty():
+    return not QuerySet(Tool).filter(tool_type=ToolType.CUSTOM).exists()

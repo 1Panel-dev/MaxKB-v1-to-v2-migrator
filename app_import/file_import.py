@@ -74,3 +74,6 @@ def import_():
     page(ImportQuerySet('file'), 1, file_import, "file", "导入文件",
          check=import_check)
     page(ImportQuerySet('image'), 1, image_import, "image", "导入图片", check=import_check)
+
+def check_file_empty():
+    return not QuerySet(File).exists()

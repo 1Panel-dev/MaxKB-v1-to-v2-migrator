@@ -312,3 +312,6 @@ def import_():
          'chat_record',
          "导入对话日志记录",
          check=import_check)
+
+def check_application_empty():
+    return not QuerySet(Application).exists()

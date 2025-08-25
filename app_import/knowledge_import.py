@@ -200,3 +200,6 @@ def import_():
         "导入问题段落关联关系", check=import_check
     )
     page(ImportQuerySet('embedding'), 1, embedding_import, "embedding", "导入向量", check=import_check)
+
+def check_knowledge_empty():
+    return not QuerySet(Knowledge).exists()
