@@ -7,6 +7,7 @@
     @desc:
 """
 import os
+import sys
 
 import django
 
@@ -29,7 +30,7 @@ def app_import():
     version = os.environ.get('MAXKB_VERSION', '')
     if base_version(version) != 'v2.1.0':
         print(f"当前版本 {version} 不是 v2.1.0 版本，不能导入数据！")
-        return
+        sys.exit(1)
 
     if contains_xpack():
         from xpack.serializers.license.license_serializers import LicenseSerializers
@@ -40,7 +41,7 @@ def app_import():
         license_is_valid = cache.get(get_key('license_is_valid'), version=version)
         if not license_is_valid:
             print("当前版本没有授权，请导入 License 文件！")
-            return
+            sys.exit(1)
 
     un_zip()
     file_import()

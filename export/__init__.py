@@ -7,6 +7,7 @@
     @desc:
 """
 import os
+import sys
 import django
 
 
@@ -27,7 +28,7 @@ def export():
     version = os.environ.get('MAXKB_VERSION', '')
     if base_version(version) != 'v1.10.10-lts':
         print(f"当前版本 {version} 不是 v1.10.10-lts 版本，不能导出数据！")
-        return
+        sys.exit(1)
 
     _export()
     knowledge_export()
