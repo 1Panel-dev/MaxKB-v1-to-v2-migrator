@@ -50,19 +50,19 @@ def log_export(log_list, source_name, current_page):
     batch_list = [LogModel(log).data for log in log_list]
     save_batch_file(batch_list, source_name, current_page)
 
-
+model_name_count_global = {}
 def model_export(model_list, source_name, current_page):
-    name_count = {}
+    global model_name_count_global
     batch_list = []
 
     for model in model_list:
         model_data = ModelModel(model).data
 
         original_name = model_data['name']
-        count = name_count.get(original_name, 0)
+        count = model_name_count_global.get(original_name, 0)
         if count > 0:
             model_data['name'] = f"{original_name}{count}"
-        name_count[original_name] = count + 1
+        model_name_count_global[original_name] = count + 1
 
         batch_list.append(model_data)
     save_batch_file(batch_list, source_name, current_page)
