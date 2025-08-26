@@ -14,7 +14,7 @@ from django.db.models import QuerySet
 from application.models import Application, ApplicationFolder, ApplicationVersion, ApplicationApiKey, \
     ApplicationAccessToken, ApplicationChatUserStats, Chat, ChatRecord
 from application.serializers.application import ApplicationOperateSerializer
-from commons.util import page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename
 from knowledge.models import File
 
 
@@ -292,23 +292,23 @@ def check_application_folder():
 
 def import_():
     check_application_folder()
-    page(ImportQuerySet('application'), 1, application_import, "application", "导入应用", check=import_check)
-    page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version', "导入应用版本",
+    import_page(ImportQuerySet('application'), 1, application_import, "application", "导入应用", check=import_check)
+    import_page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version', "导入应用版本",
          check=import_check)
-    page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key', "导入应用api key",
+    import_page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key', "导入应用api key",
          check=import_check)
-    page(ImportQuerySet('application_access_token'), 1, application_access_token_import, 'application_access_token',
+    import_page(ImportQuerySet('application_access_token'), 1, application_access_token_import, 'application_access_token',
          "导入应用访问限制配置",
          check=import_check)
-    page(ImportQuerySet('application_public_access_client'), 1, application_public_access_client_import,
+    import_page(ImportQuerySet('application_public_access_client'), 1, application_public_access_client_import,
          'application_public_access_client',
          "导入应用客户端信息",
          check=import_check)
-    page(ImportQuerySet('chat'), 1, application_chat_import,
+    import_page(ImportQuerySet('chat'), 1, application_chat_import,
          'chat',
          "导入对话日志",
          check=import_check)
-    page(ImportQuerySet('chat_record'), 1, application_chat_record_import,
+    import_page(ImportQuerySet('chat_record'), 1, application_chat_record_import,
          'chat_record',
          "导入对话日志记录",
          check=import_check)

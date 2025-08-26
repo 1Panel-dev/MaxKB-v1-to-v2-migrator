@@ -2,7 +2,7 @@ import pickle
 
 from django.db.models import QuerySet
 
-from commons.util import page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename
 from tools.models import Tool, ToolFolder, ToolScope, ToolType
 
 
@@ -49,7 +49,7 @@ def check_tool_folder():
 def import_():
     check_tool_folder()
 
-    page(ImportQuerySet('function_lib'), 1, tool_import, "function_lib", "导入工具", check=import_check)
+    import_page(ImportQuerySet('function_lib'), 1, tool_import, "function_lib", "导入工具", check=import_check)
 
 
 def check_tool_empty():

@@ -4,7 +4,7 @@ import re
 from django.db import models
 from django.db.models import QuerySet
 
-from commons.util import page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename
 from knowledge.models import KnowledgeFolder, Knowledge, KnowledgeType, KnowledgeScope, Document, Paragraph, \
     ProblemParagraphMapping, Problem, Embedding, File, FileSourceType
 
@@ -191,15 +191,15 @@ def check_knowledge_folder():
 def import_():
     check_knowledge_folder()
 
-    page(ImportQuerySet('knowledge'), 1, knowledge_import, "knowledge", "导入知识库", check=import_check)
-    page(ImportQuerySet('document'), 1, document_import, "document", "导入文档", check=import_check)
-    page(ImportQuerySet('paragraph'), 1, paragraph_import, "paragraph", "导入段落", check=import_check)
-    page(ImportQuerySet('problem'), 1, problem_import, "problem", "导入问题", check=import_check)
-    page(
+    import_page(ImportQuerySet('knowledge'), 1, knowledge_import, "knowledge", "导入知识库", check=import_check)
+    import_page(ImportQuerySet('document'), 1, document_import, "document", "导入文档", check=import_check)
+    import_page(ImportQuerySet('paragraph'), 1, paragraph_import, "paragraph", "导入段落", check=import_check)
+    import_page(ImportQuerySet('problem'), 1, problem_import, "problem", "导入问题", check=import_check)
+    import_page(
         ImportQuerySet('problem_paragraph_mapping'), 1, problem_paragraph_mapping_import, "problem_paragraph_mapping",
         "导入问题段落关联关系", check=import_check
     )
-    page(ImportQuerySet('embedding'), 1, embedding_import, "embedding", "导入向量", check=import_check)
+    import_page(ImportQuerySet('embedding'), 1, embedding_import, "embedding", "导入向量", check=import_check)
 
 def check_knowledge_empty():
     return not QuerySet(Knowledge).exists()

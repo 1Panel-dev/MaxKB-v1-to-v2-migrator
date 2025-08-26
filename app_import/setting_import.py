@@ -13,7 +13,7 @@ from django.db.models import QuerySet
 
 from common.constants.permission_constants import ResourcePermission, ResourceAuthType
 from common.utils.rsa_util import rsa_long_decrypt, rsa_long_encrypt
-from commons.util import page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename
 from models_provider.models import Model
 from system_manage.models import SystemSetting, AuthTargetType, WorkspaceUserResourcePermission
 from users.models import User
@@ -208,9 +208,9 @@ def team_member_permission_import(file_list, source_name, current_page):
 
 
 def import_():
-    page(ImportQuerySet('system_setting'), 1, system_setting_import, "system_setting", "导入系统设置",
+    import_page(ImportQuerySet('system_setting'), 1, system_setting_import, "system_setting", "导入系统设置",
          check=import_check)
-    page(ImportQuerySet('user'), 1, user_import, "user", "导入用户", check=import_check)
-    page(ImportQuerySet('model'), 1, model_import, "model", "导入模型", check=import_check)
-    page(ImportQuerySet("team_member_permission"), 1, team_member_permission_import, 'team_member_permission',
+    import_page(ImportQuerySet('user'), 1, user_import, "user", "导入用户", check=import_check)
+    import_page(ImportQuerySet('model'), 1, model_import, "model", "导入模型", check=import_check)
+    import_page(ImportQuerySet("team_member_permission"), 1, team_member_permission_import, 'team_member_permission',
          '导入授权', check=import_check)

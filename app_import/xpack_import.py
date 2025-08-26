@@ -13,7 +13,7 @@ import uuid_utils.compat as uuid
 
 from application.models import ApplicationAccessToken
 from common.constants.permission_constants import RoleConstants
-from commons.util import page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename
 from knowledge.models import File, FileSourceType
 from maxkb.const import CONFIG
 from role_setting.models import UserRoleRelation
@@ -337,16 +337,16 @@ def log_import(log_list, source_name, current_page):
 
 
 def import_():
-    page(ImportQuerySet('application_setting'), 1, application_setting_import, "application_setting", "导入应用设置",
+    import_page(ImportQuerySet('application_setting'), 1, application_setting_import, "application_setting", "导入应用设置",
          check=import_check)
-    page(ImportQuerySet('platform'), 1, platform_import, "platform", "导入三方平台", check=import_check)
-    page(ImportQuerySet('auth_config'), 1, auth_config_import, "auth_config", "导入认证配置", check=import_check)
-    page(ImportQuerySet('platform_source'), 1, platform_source_import, "platform_source", "导出三方平台认证",
+    import_page(ImportQuerySet('platform'), 1, platform_import, "platform", "导入三方平台", check=import_check)
+    import_page(ImportQuerySet('auth_config'), 1, auth_config_import, "auth_config", "导入认证配置", check=import_check)
+    import_page(ImportQuerySet('platform_source'), 1, platform_source_import, "platform_source", "导出三方平台认证",
          check=import_check)
-    page(ImportQuerySet('platform_user'), 1, platform_user_import, "platform_user", "导入三方平台用户",
+    import_page(ImportQuerySet('platform_user'), 1, platform_user_import, "platform_user", "导入三方平台用户",
          check=import_check)
-    page(ImportQuerySet('system_api_key'), 1, system_api_key_import, "system_api_key", "导入系统api密钥",
+    import_page(ImportQuerySet('system_api_key'), 1, system_api_key_import, "system_api_key", "导入系统api密钥",
          check=import_check)
-    page(ImportQuerySet('system_params'), 1, system_params_import, "system_params", "导入系统参数", check=import_check)
+    import_page(ImportQuerySet('system_params'), 1, system_params_import, "system_params", "导入系统参数", check=import_check)
     import_user_relation()
-    page(ImportQuerySet('log'), 1, log_import, "log", "导入操作日志", check=import_check)
+    import_page(ImportQuerySet('log'), 1, log_import, "log", "导入操作日志", check=import_check)
