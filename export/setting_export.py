@@ -65,8 +65,6 @@ def model_export(model_list, source_name, current_page):
         name_count[original_name] = count + 1
 
         batch_list.append(model_data)
-
-        batch_list.append(model_data)
     save_batch_file(batch_list, source_name, current_page)
 
 
