@@ -61,28 +61,41 @@ def import_check(source_name, current_page):
 
 def page(query_set, page_size, handler, source_name, desc, primary_key="id", check=_check):
     """
-
-    @param primary_key: 主键
-    @param desc:        任务描述
-    @param query_set:   查询query_set
-    @param page_size:   每次查询大小
-    @param handler:     数据处理器
-    @param source_name: 资源名称
-    @param check:       校验是否已经导出
-    @return:
+    优化的分页函数，使用游标分页提高大数据量查询效率
     """
-
     query = query_set.order_by(primary_key)
     count = query_set.count()
+    
     with tqdm(range(count), desc=desc,
               bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}") as pbar:
-        for i in range(0, ceil(count / page_size)):
-            offset = i * page_size
-            if check(source_name, i + 1):
-                data_list = query.all()[offset: offset + page_size]
-                handler(data_list, source_name, i + 1)
-                pbar.refresh()
-            pbar.update(page_size if offset + page_size <= count else count - offset)
+        
+        last_id = None
+        current_page = 1
+        processed_count = 0
+        
+        while processed_count < count:
+            if check(source_name, current_page):
+                # 使用游标分页，避免 OFFSET 的性能问题
+                if last_id is None:
+                    data_list = query.all()[:page_size]
+                else:
+                    # 使用主键过滤，而不是 OFFSET
+                    data_list = query.filter(**{f"{primary_key}__gt": last_id})[:page_size]
+                
+                if not data_list:
+                    break
+                    
+                handler(data_list, source_name, current_page)
+                
+                data_list_items = list(data_list)
+                if data_list_items:
+                    last_id = getattr(data_list_items[-1], primary_key)
+                
+            # 更新进度
+            batch_size = min(page_size, count - processed_count)
+            pbar.update(batch_size)
+            processed_count += batch_size
+            current_page += 1
 
 
 def get_dir_path(source_name, current_page):
