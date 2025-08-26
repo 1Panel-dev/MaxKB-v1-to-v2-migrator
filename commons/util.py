@@ -61,41 +61,44 @@ def import_check(source_name, current_page):
 
 def page(query_set, page_size, handler, source_name, desc, primary_key="id", check=_check):
     """
-    优化的分页函数，使用游标分页提高大数据量查询效率
+    优化的分页处理函数
+
+    @param primary_key: 主键
+    @param desc:        任务描述
+    @param query_set:   查询query_set
+    @param page_size:   每次查询大小
+    @param handler:     数据处理器
+    @param source_name: 资源名称
+    @param check:       校验是否已经导出
+    @return:
     """
     query = query_set.order_by(primary_key)
     count = query_set.count()
-    
-    with tqdm(range(count), desc=desc,
-              bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}") as pbar:
-        
-        last_id = None
-        current_page = 1
+    total_pages = ceil(count / page_size)
+
+    # 预先获取所有数据，避免重复调用
+    all_data = query.all()
+
+    with tqdm(
+        total=count,
+        desc=desc,
+        bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}",
+    ) as pbar:
         processed_count = 0
-        
-        while processed_count < count:
-            if check(source_name, current_page):
-                # 使用游标分页，避免 OFFSET 的性能问题
-                if last_id is None:
-                    data_list = query.all()[:page_size]
-                else:
-                    # 使用主键过滤，而不是 OFFSET
-                    data_list = query.filter(**{f"{primary_key}__gt": last_id})[:page_size]
-                
-                if not data_list:
-                    break
-                    
-                handler(data_list, source_name, current_page)
-                
-                data_list_items = list(data_list)
-                if data_list_items:
-                    last_id = getattr(data_list_items[-1], primary_key)
-                
-            # 更新进度
-            batch_size = min(page_size, count - processed_count)
-            pbar.update(batch_size)
-            processed_count += batch_size
-            current_page += 1
+        for i in range(total_pages):
+            page_num = i + 1
+            if check(source_name, page_num):
+                # 使用索引范围直接获取数据块
+                start_idx = i * page_size
+                end_idx = min(start_idx + page_size, count)
+                data_list = all_data[start_idx:end_idx]
+
+                handler(data_list, source_name, page_num)
+
+            # 计算实际处理的数据量
+            current_batch_size = min(page_size, count - processed_count)
+            processed_count += current_batch_size
+            pbar.update(current_batch_size)
 
 
 def get_dir_path(source_name, current_page):
