@@ -20,6 +20,8 @@ ________________________________________________________________________________
 
 ## 迁移操作步骤
 
+### Linux/macOS 系统
+
 1. **导出v1数据**
    ```bash
    # 在v1机器上下载v1-to-v2-migrator
@@ -36,6 +38,30 @@ ________________________________________________________________________________
    cd v1-to-v2-migrator
    bash import_v2_data.sh <v2_container_name>
    ```
+
+### Windows 系统
+
+Windows 系统提供了批处理文件(.bat)和 PowerShell 脚本(.ps1)两种版本，推荐使用 PowerShell 版本。
+
+1. **导出v1数据**
+   ```powershell
+   # PowerShell 版本（推荐）
+   .\export_v1_data.ps1 -ContainerName <v1_container_name>
+   
+   # 或者使用批处理版本
+   export_v1_data.bat <v1_container_name>
+   ```
+
+2. **数据导入至v2**
+   ```powershell
+   # PowerShell 版本（推荐）
+   .\import_v2_data.ps1 -ContainerName <v2_container_name>
+   
+   # 或者使用批处理版本
+   import_v2_data.bat <v2_container_name>
+   ```
+
+详细的 Windows 使用说明请参考：[README_Windows.md](README_Windows.md)
 
 ## FAQ
 - v1.10.10-lts之前的版本可以直接迁移到v2么？  
