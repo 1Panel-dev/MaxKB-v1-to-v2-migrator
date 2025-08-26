@@ -67,17 +67,9 @@ try {
         exit 1
     }
 
-    # 复制迁移工具到v2容器
-    Write-Step "复制迁移工具到v2容器..."
-    docker cp . "${ContainerName}:/opt/maxkb-app/v1-to-v2-migrator"
-    if ($LASTEXITCODE -ne 0) {
-        throw "复制迁移工具失败"
-    }
-    Write-Success "迁移工具复制完成"
-
     # 复制迁移数据文件到v2容器
     Write-Step "复制迁移数据文件到v2容器..."
-    docker cp "./migrate.zip" "${ContainerName}:/opt/maxkb-app/v1-to-v2-migrator/"
+    docker cp . "${ContainerName}:/opt/maxkb-app/v1-to-v2-migrator"
     if ($LASTEXITCODE -ne 0) {
         throw "复制迁移数据文件失败"
     }

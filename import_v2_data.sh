@@ -43,24 +43,16 @@ if [ ! -f "./migrate.zip" ]; then
     exit 1
 fi
 
-# 复制迁移工具到v2容器
-echo -e "${MAGENTA}[步骤1]${NC} 复制迁移工具到v2容器..."
-if ! docker cp . "$V2_CONTAINER":/opt/maxkb-app/v1-to-v2-migrator; then
-    echo -e "${RED}[错误]${NC} 复制迁移工具失败"
-    exit 1
-fi
-echo -e "${GREEN}[完成]${NC} 迁移工具复制完成"
-
 # 复制迁移数据文件到v2容器
-echo -e "${MAGENTA}[步骤2]${NC} 复制迁移数据文件到v2容器..."
-if ! docker cp ./migrate.zip "$V2_CONTAINER":/opt/maxkb-app/v1-to-v2-migrator/; then
+echo -e "${MAGENTA}[步骤1]${NC} 复制迁移数据文件到v2容器..."
+if ! docker cp . "$V2_CONTAINER":/opt/maxkb-app/v1-to-v2-migrator; then
     echo -e "${RED}[错误]${NC} 复制迁移数据文件失败"
     exit 1
 fi
 echo -e "${GREEN}[完成]${NC} 迁移数据文件复制完成"
 
 # 在v2容器中导入数据
-echo -e "${MAGENTA}[步骤3]${NC} 在v2容器中导入数据..."
+echo -e "${MAGENTA}[步骤2]${NC} 在v2容器中导入数据..."
 if ! docker exec -w /opt/maxkb-app/v1-to-v2-migrator "$V2_CONTAINER" python migrate.py import; then
     echo -e "${RED}[错误]${NC} 数据导入失败"
     exit 1
@@ -68,7 +60,7 @@ fi
 echo -e "${GREEN}[完成]${NC} 数据导入完成"
 
 # 清理v2容器中的临时文件
-echo -e "${MAGENTA}[步骤4]${NC} 清理临时文件..."
+echo -e "${MAGENTA}[步骤3]${NC} 清理临时文件..."
 docker exec "$V2_CONTAINER" rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.zip 2>/dev/null || true
 echo -e "${GREEN}[完成]${NC} 临时文件清理完成"
 

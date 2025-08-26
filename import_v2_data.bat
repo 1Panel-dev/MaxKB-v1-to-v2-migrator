@@ -36,18 +36,9 @@ if not exist ".\migrate.zip" (
     exit /b 1
 )
 
-REM 复制迁移工具到v2容器
-echo [步骤1] 复制迁移工具到v2容器...
-docker cp . "%V2_CONTAINER%":/opt/maxkb-app/v1-to-v2-migrator
-if !errorlevel! neq 0 (
-    echo [错误] 复制迁移工具失败
-    exit /b 1
-)
-echo [完成] 迁移工具复制完成
-
 REM 复制迁移数据文件到v2容器
-echo [步骤2] 复制迁移数据文件到v2容器...
-docker cp .\migrate.zip "%V2_CONTAINER%":/opt/maxkb-app/v1-to-v2-migrator/
+echo [步骤1] 复制迁移数据文件到v2容器...
+docker cp . "%V2_CONTAINER%":/opt/maxkb-app/v1-to-v2-migrator
 if !errorlevel! neq 0 (
     echo [错误] 复制迁移数据文件失败
     exit /b 1
@@ -55,7 +46,7 @@ if !errorlevel! neq 0 (
 echo [完成] 迁移数据文件复制完成
 
 REM 在v2容器中导入数据
-echo [步骤3] 在v2容器中导入数据...
+echo [步骤2] 在v2容器中导入数据...
 docker exec -w /opt/maxkb-app/v1-to-v2-migrator "%V2_CONTAINER%" python migrate.py import
 if !errorlevel! neq 0 (
     echo [错误] 数据导入失败
@@ -64,7 +55,7 @@ if !errorlevel! neq 0 (
 echo [完成] 数据导入完成
 
 REM 清理v2容器中的临时文件
-echo [步骤4] 清理临时文件...
+echo [步骤3] 清理临时文件...
 docker exec "%V2_CONTAINER%" rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.zip 2>nul
 echo [完成] 临时文件清理完成
 
