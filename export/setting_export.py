@@ -52,7 +52,21 @@ def log_export(log_list, source_name, current_page):
 
 
 def model_export(model_list, source_name, current_page):
-    batch_list = [ModelModel(model).data for model in model_list]
+    name_count = {}
+    batch_list = []
+
+    for model in model_list:
+        model_data = ModelModel(model).data
+
+        original_name = model_data['name']
+        count = name_count.get(original_name, 0)
+        if count > 0:
+            model_data['name'] = f"{original_name}{count}"
+        name_count[original_name] = count + 1
+
+        batch_list.append(model_data)
+
+        batch_list.append(model_data)
     save_batch_file(batch_list, source_name, current_page)
 
 
