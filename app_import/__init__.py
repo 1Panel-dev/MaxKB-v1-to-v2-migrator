@@ -48,7 +48,9 @@ def app_import():
         print("当前数据库不是空环境，请确认后再导入数据！")
         sys.exit(1)
 
+    print("正在解压迁移数据...")
     un_zip()
+    print("迁移数据解压完成")
     file_import()
     setting_import()
     application_import()

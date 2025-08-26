@@ -43,4 +43,6 @@ def export():
             from .xpack_export import export as xpack_export
             xpack_export()
 
+    print("正在打包迁移数据...")
     zip_folder()
+    print("迁移数据打包完成")
