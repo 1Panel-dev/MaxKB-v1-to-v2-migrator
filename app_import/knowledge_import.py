@@ -1,5 +1,6 @@
 import pickle
 import re
+import uuid
 
 from django.db import models
 from django.db.models import QuerySet
@@ -99,13 +100,33 @@ def problem_import(file_list, source_name, current_page):
 
 
 def extract_file_and_image_ids(content):
-    # 提取 /api/file/ 后面的 ID
-    file_ids = re.findall(r'/api/file/([^/\s\)]+)', content)
-
-    # 提取 /api/image/ 后面的 ID
-    image_ids = re.findall(r'/api/image/([^/\s\)]+)', content)
-
-    return file_ids, image_ids
+    # UUID 格式的正则表达式：8-4-4-4-12 个十六进制字符
+    uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    
+    # 提取 /api/file/ 后面的有效 UUID
+    file_matches = re.findall(rf'/api/file/({uuid_pattern})', content, re.IGNORECASE)
+    
+    # 提取 /api/image/ 后面的有效 UUID
+    image_matches = re.findall(rf'/api/image/({uuid_pattern})', content, re.IGNORECASE)
+    
+    # 验证提取的 UUID 是否有效
+    valid_file_ids = []
+    for match in file_matches:
+        try:
+            uuid.UUID(match)  # 验证 UUID 格式
+            valid_file_ids.append(match)
+        except ValueError:
+            print(f"警告: 无效的文件 UUID: {match}")
+    
+    valid_image_ids = []
+    for match in image_matches:
+        try:
+            uuid.UUID(match)  # 验证 UUID 格式
+            valid_image_ids.append(match)
+        except ValueError:
+            print(f"警告: 无效的图片 UUID: {match}")
+    
+    return valid_file_ids, valid_image_ids
 
 
 def paragraph_import(file_list, source_name, current_page):
