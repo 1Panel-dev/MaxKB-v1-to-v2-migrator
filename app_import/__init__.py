@@ -43,14 +43,26 @@ def app_import():
             print("当前版本没有授权，请导入 License 文件！")
             sys.exit(1)
 
-    # 检查是否是空环境
-    if not check_knowledge_empty() or not check_file_empty() or not check_application_empty() or not check_tool_empty():
-        print("当前数据库不是空环境，请确认后再导入数据！")
-        sys.exit(1)
+     # 检查导入标记文件
+    import_flag_file = os.path.join(os.path.dirname(__file__), '..', '.import_completed')
+
+    # 如果没有导入标记，则检查是否是空环境
+    if not os.path.exists(import_flag_file):
+        if not check_knowledge_empty() or not check_file_empty() or not check_application_empty() or not check_tool_empty():
+            print("当前数据库不是空环境，请确认后再导入数据！")
+            sys.exit(1)
+        print("首次导入检测通过，开始导入数据...")
+    else:
+        print("跳过空环境检查，直接导入数据...")
 
     print("正在解压迁移数据...")
     un_zip()
     print("迁移数据解压完成")
+
+    # 创建导入完成标记文件
+    with open(import_flag_file, 'w') as f:
+        f.write(f"Import completed at {os.environ.get('MAXKB_VERSION', '')}")
+
     file_import()
     setting_import()
     application_import()
