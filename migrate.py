@@ -37,10 +37,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     action = args.action
     if action == "export":
-        from export import export
+        from exporter import export
 
         export()
     else:
-        from app_import import app_import
+        from importer import app_import
 
         app_import()
