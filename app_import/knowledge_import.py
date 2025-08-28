@@ -37,7 +37,7 @@ def to_v2_document(instance):
         type=instance.get('type'),
         hit_handling_method=instance.get('hit_handling_method'),
         directly_return_similarity=instance.get('directly_return_similarity'),
-        meta=instance.get('meta'),
+        meta={**instance.get('meta'), 'allow_download': True},
     )
 
 
