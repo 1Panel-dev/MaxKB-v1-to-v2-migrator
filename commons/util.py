@@ -182,3 +182,19 @@ def base_version(version: str) -> str:
         return ''
     m = re.match(r'^\s*(v[\w\.\-]+)', version)
     return m.group(1) if m else version.strip().split()[0]
+
+
+def ver_tuple(v: str):
+    s = base_version(v) or ""
+    s = s.strip().lower()
+    if s.startswith("v"):
+        s = s[1:]
+    s = s.split("-")[0]  # 去掉 -lts 等后缀
+    parts = s.split(".")
+    try:
+        major = int(parts[0]) if len(parts) > 0 else 0
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2]) if len(parts) > 2 else 0
+    except ValueError:
+        return (0, 0, 0)
+    return (major, minor, patch)

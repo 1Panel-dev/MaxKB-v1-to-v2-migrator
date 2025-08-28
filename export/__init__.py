@@ -22,12 +22,12 @@ def export():
     from .function_lib import export as function_export
     from commons.util import zip_folder
     from commons.util import contains_xpack
-    from commons.util import base_version
+    from commons.util import ver_tuple
 
-    # 只能导出 v1.10.10-lts (build at 2025-08-21T13:49, commit: 4c878b0)
+    # 只能导出 v1.10.10-lts (build at 2025-08-21T13:49, commit: 4c878b0) 及以上版本的数据
     version = os.environ.get('MAXKB_VERSION', '')
-    if base_version(version) != 'v1.10.10-lts':
-        print(f"当前版本 {version} 不是 v1.10.10-lts 版本，不能导出数据！")
+    if ver_tuple(version) < ver_tuple('v1.10.10-lts'):
+        print(f"当前版本 {version} 不是 v1.10.10-lts 及以上版本，不能导出数据！")
         sys.exit(1)
 
     _export()
