@@ -22,7 +22,7 @@ def to_v2_node(node):
     node_type = node.get('type')
     if node_type == 'search-dataset-node':
         node['type'] = 'search-knowledge-node'
-        node_data = node.properties.get('node_data')
+        node_data = node.get('properties').get('node_data')
         node_data['knowledge_id_list'] = node_data.pop('dataset_id_list')
         node_data['knowledge_setting'] = node_data.pop('dataset_setting')
         node_data['show_knowledge'] = True
@@ -32,7 +32,7 @@ def to_v2_node(node):
 
     elif node_type == 'function-lib-node':
         node['type'] = 'tool-lib-node'
-        node_data = node.properties.get('node_data')
+        node_data = node.get('properties').get('node_data')
         node_data['tool_lib_id'] = node_data.pop('function_lib_id')
     return node
 
