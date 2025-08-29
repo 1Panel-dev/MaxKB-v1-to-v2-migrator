@@ -8,12 +8,13 @@
 """
 import json
 import pickle
+from functools import reduce
 
 from django.db.models import QuerySet
 
 from common.constants.permission_constants import ResourcePermission, ResourceAuthType
 from common.utils.rsa_util import rsa_long_decrypt, rsa_long_encrypt
-from commons.util import import_page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 from models_provider.models import Model
 from system_manage.models import SystemSetting, AuthTargetType, WorkspaceUserResourcePermission
 from users.models import User
@@ -212,6 +213,25 @@ def model_import(file_list, source_name, current_page):
         QuerySet(Model).filter(id__in=[m.id for m in model_model_list]).delete()
         # 插入数据
         QuerySet(Model).bulk_create(model_model_list)
+
+        # 删除授权相关数据
+        QuerySet(WorkspaceUserResourcePermission).filter(
+            target__in=[model.get('id') for model in model_list]).delete()
+        # 获取所有用户数据
+        user_model_list = QuerySet(User).all()
+        # 构建工具权限列表
+        model_permission_list = reduce(lambda x, y: [*x, *y], [
+            [
+                to_workspace_user_resource_permission(user.id, 'MODEL', model.get('id'),
+                                                      permission_list=['MANAGE'] if
+                                                      str(user.id) == model.get('id') else ['VIEW']) for user in
+                user_model_list]
+            if model.get('permission_type') == 'PUBLIC' else [
+                to_workspace_user_resource_permission(model.get('user'), 'MODEL', model.get('id'))]
+            for
+            model in model_list], [])
+        # 插入授权数据
+        QuerySet(WorkspaceUserResourcePermission).bulk_create(model_permission_list)
         # 修改标识
         rename(file)
 

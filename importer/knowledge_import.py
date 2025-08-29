@@ -5,9 +5,10 @@ import uuid
 from django.db import models
 from django.db.models import QuerySet
 
-from commons.util import import_page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 from knowledge.models import KnowledgeFolder, Knowledge, KnowledgeType, KnowledgeScope, Document, Paragraph, \
     ProblemParagraphMapping, Problem, Embedding, File, FileSourceType
+from system_manage.models import WorkspaceUserResourcePermission
 
 
 def to_v2_knowledge(knowledge):
@@ -80,6 +81,15 @@ def knowledge_import(file_list, source_name, current_page):
         knowledge_list = pickle.loads(file.read_bytes())
         knowledge_model_list = [to_v2_knowledge(item) for item in knowledge_list]
         QuerySet(Knowledge).bulk_create(knowledge_model_list)
+        # 删除授权相关数据
+        QuerySet(WorkspaceUserResourcePermission).filter(
+            target__in=[knowledge_model.id for knowledge_model in knowledge_model_list]).delete()
+        # 插入授权数据
+        knowledge_permission_list = [
+            to_workspace_user_resource_permission(knowledge_model.user_id, 'KNOWLEDGE', knowledge_model.id)
+            for
+            knowledge_model in knowledge_model_list]
+        QuerySet(WorkspaceUserResourcePermission).bulk_create(knowledge_permission_list)
         rename(file)
 
 
@@ -102,13 +112,13 @@ def problem_import(file_list, source_name, current_page):
 def extract_file_and_image_ids(content):
     # UUID 格式的正则表达式：8-4-4-4-12 个十六进制字符
     uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-    
+
     # 提取 /api/file/ 后面的有效 UUID
     file_matches = re.findall(rf'/api/file/({uuid_pattern})', content, re.IGNORECASE)
-    
+
     # 提取 /api/image/ 后面的有效 UUID
     image_matches = re.findall(rf'/api/image/({uuid_pattern})', content, re.IGNORECASE)
-    
+
     # 验证提取的 UUID 是否有效
     valid_file_ids = []
     for match in file_matches:
@@ -117,7 +127,7 @@ def extract_file_and_image_ids(content):
             valid_file_ids.append(match)
         except ValueError:
             print(f"警告: 无效的文件 UUID: {match}")
-    
+
     valid_image_ids = []
     for match in image_matches:
         try:
@@ -125,7 +135,7 @@ def extract_file_and_image_ids(content):
             valid_image_ids.append(match)
         except ValueError:
             print(f"警告: 无效的图片 UUID: {match}")
-    
+
     return valid_file_ids, valid_image_ids
 
 
@@ -221,6 +231,7 @@ def import_():
         "导入问题段落关联关系", check=import_check
     )
     import_page(ImportQuerySet('embedding'), 1, embedding_import, "embedding", "导入向量", check=import_check)
+
 
 def check_knowledge_empty():
     return not QuerySet(Knowledge).exists()

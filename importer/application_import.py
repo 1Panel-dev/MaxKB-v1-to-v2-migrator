@@ -15,9 +15,12 @@ from application.models import Application, ApplicationFolder, ApplicationVersio
     ApplicationAccessToken, ApplicationChatUserStats, Chat, ChatRecord
 from application.serializers.application import ApplicationOperateSerializer
 from django.db.models import QuerySet
-from knowledge.models import File
+
 from common.db.search import native_update
-from commons.util import import_page, ImportQuerySet, import_check, rename
+from knowledge.models import File
+
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
+from system_manage.models import WorkspaceUserResourcePermission
 
 
 def to_v2_node(node):
@@ -111,6 +114,15 @@ def application_import(file_list, source_name, current_page):
             id__in=[simple_app_version.id for simple_app_version in simple_app_version_list])
         # 插入简易版本发布信息
         QuerySet(ApplicationVersion).bulk_create(simple_app_version_list)
+
+        # 删除授权相关数据
+        QuerySet(WorkspaceUserResourcePermission).filter(
+            target__in=[application_model.id for application_model in application_model_list]).delete()
+        # 插入授权数据
+        application_permission_list = [
+            to_workspace_user_resource_permission(application_model.user_id, 'APPLICATION', application_model.id) for
+            application_model in application_model_list]
+        QuerySet(WorkspaceUserResourcePermission).bulk_create(application_permission_list)
         rename(file)
 
 
