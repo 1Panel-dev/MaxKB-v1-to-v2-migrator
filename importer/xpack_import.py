@@ -248,7 +248,7 @@ def auth_config_import(auth_config_list, source_name, current_page):
 
 
 def to_v2_platform_source(platform_source):
-    config_data = platform_source.get('config_data', {})
+    config_data = platform_source.get('config', {})
     # 更新重定向URL路径
     config_data = update_redirect_urls(config_data)
     id = uuid.uuid7()
