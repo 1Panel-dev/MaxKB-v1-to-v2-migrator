@@ -41,7 +41,8 @@ def to_v2_workflow(workflow):
     nodes = workflow.get('nodes')
     if nodes is not None:
         nodes = [to_v2_node(node) for node in nodes]
-    return {**workflow, 'nodes': nodes}
+        return {**workflow, 'nodes': nodes}
+    return workflow
 
 
 def to_v2_icon(icon, application_id):
@@ -75,7 +76,7 @@ def to_v2_application(application):
                        tts_model_params_setting=application.get('tts_model_params_setting'),
                        problem_optimization=application.get('problem_optimization'),
                        icon=to_v2_icon(application.get('icon'), application.get('id')),
-                       work_flow=application.get('work_flow'),
+                       work_flow=to_v2_workflow(application.get('work_flow')),
                        type=application.get('type'),
                        problem_optimization_prompt=application.get('problem_optimization_prompt'),
                        tts_model_id=application.get('tts_model'),
@@ -293,25 +294,29 @@ def check_application_folder():
 def import_():
     check_application_folder()
     import_page(ImportQuerySet('application'), 1, application_import, "application", "导入应用", check=import_check)
-    import_page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version', "导入应用版本",
-         check=import_check)
-    import_page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key', "导入应用api key",
-         check=import_check)
-    import_page(ImportQuerySet('application_access_token'), 1, application_access_token_import, 'application_access_token',
-         "导入应用访问限制配置",
-         check=import_check)
+    import_page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version',
+                "导入应用版本",
+                check=import_check)
+    import_page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key',
+                "导入应用api key",
+                check=import_check)
+    import_page(ImportQuerySet('application_access_token'), 1, application_access_token_import,
+                'application_access_token',
+                "导入应用访问限制配置",
+                check=import_check)
     import_page(ImportQuerySet('application_public_access_client'), 1, application_public_access_client_import,
-         'application_public_access_client',
-         "导入应用客户端信息",
-         check=import_check)
+                'application_public_access_client',
+                "导入应用客户端信息",
+                check=import_check)
     import_page(ImportQuerySet('chat'), 1, application_chat_import,
-         'chat',
-         "导入对话日志",
-         check=import_check)
+                'chat',
+                "导入对话日志",
+                check=import_check)
     import_page(ImportQuerySet('chat_record'), 1, application_chat_record_import,
-         'chat_record',
-         "导入对话日志记录",
-         check=import_check)
+                'chat_record',
+                "导入对话日志记录",
+                check=import_check)
+
 
 def check_application_empty():
     return not QuerySet(Application).exists()
