@@ -41,7 +41,8 @@ def to_v2_workflow(workflow):
     nodes = workflow.get('nodes')
     if nodes is not None:
         nodes = [to_v2_node(node) for node in nodes]
-    return {**workflow, 'nodes': nodes}
+        return {**workflow, 'nodes': nodes}
+    return workflow
 
 
 def to_v2_icon(icon, application_id):
@@ -75,7 +76,7 @@ def to_v2_application(application):
                        tts_model_params_setting=application.get('tts_model_params_setting'),
                        problem_optimization=application.get('problem_optimization'),
                        icon=to_v2_icon(application.get('icon'), application.get('id')),
-                       work_flow=application.get('work_flow'),
+                       work_flow=to_v2_workflow(application.get('work_flow')),
                        type=application.get('type'),
                        problem_optimization_prompt=application.get('problem_optimization_prompt'),
                        tts_model_id=application.get('tts_model'),
