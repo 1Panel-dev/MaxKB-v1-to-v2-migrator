@@ -328,8 +328,6 @@ def log_import(log_list, source_name, current_page):
         log_list = pickle.loads(log.read_bytes())
         log_model_list = [to_v2_log(log) for log in
                           log_list]
-        # 删除数据
-        Log.objects.all().delete()
         # 插入数据
         Log.objects.bulk_create(log_model_list)
         # 修改标识
