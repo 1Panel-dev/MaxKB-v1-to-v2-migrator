@@ -7,22 +7,24 @@
     @desc:
 """
 import datetime
+import json
 import pickle
-
-from django.db.models import QuerySet
+import re
 
 from application.models import Application, ApplicationFolder, ApplicationVersion, ApplicationApiKey, \
     ApplicationAccessToken, ApplicationChatUserStats, Chat, ChatRecord
 from application.serializers.application import ApplicationOperateSerializer
-from commons.util import import_page, ImportQuerySet, import_check, rename
+from django.db.models import QuerySet
 from knowledge.models import File
+from common.db.search import native_update
+from commons.util import import_page, ImportQuerySet, import_check, rename
 
 
 def to_v2_node(node):
     node_type = node.get('type')
     if node_type == 'search-dataset-node':
         node['type'] = 'search-knowledge-node'
-        node_data = node.properties.get('node_data')
+        node_data = node.get('properties').get('node_data')
         node_data['knowledge_id_list'] = node_data.pop('dataset_id_list')
         node_data['knowledge_setting'] = node_data.pop('dataset_setting')
         node_data['show_knowledge'] = True
@@ -32,7 +34,7 @@ def to_v2_node(node):
 
     elif node_type == 'function-lib-node':
         node['type'] = 'tool-lib-node'
-        node_data = node.properties.get('node_data')
+        node_data = node.get('properties').get('node_data')
         node_data['tool_lib_id'] = node_data.pop('function_lib_id')
     return node
 
@@ -258,21 +260,71 @@ def application_chat_import(file_list, source_name, current_page):
         rename(file)
 
 
+uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+
+
+def reset_to_v2_str(v1_data_str: str):
+    result = v1_data_str.replace("search-dataset-node", 'search-knowledge-node')
+    result = result.replace("function-node", "tool-node")
+    result = result.replace("function-lib-node", "tool-lib-node")
+    result = re.sub(rf'/api/file/({uuid_pattern})', r'./oss/file/\1', result)
+    result = re.sub(rf'/api/image/({uuid_pattern})', r'./oss/file/\1', result)
+    return result
+
+
+def reset_application_chat_record_details(details: dict):
+    details_str = json.dumps(details)
+    result = reset_to_v2_str(details_str)
+    return json.loads(result)
+
+
+def reset_application_chat_record_answer_text_list(answer_text_list):
+    answer_text_list_str = json.dumps(answer_text_list)
+    result = re.sub(rf'/api/file/({uuid_pattern})', r'./oss/file/\1', answer_text_list_str)
+    result = re.sub(rf'/api/image/({uuid_pattern})', r'./oss/file/\1', result)
+    return json.loads(result)
+
+
+def reset_application_chat_record_answer_text(answer_text):
+    result = re.sub(rf'/api/file/({uuid_pattern})', r'./oss/file/\1', answer_text)
+    result = re.sub(rf'/api/image/({uuid_pattern})', r'./oss/file/\1', result)
+    return result
+
+
+def update_chat_chat_record_count(file_list, source_name, current_page):
+    sql = """
+   update application_chat
+    set chat_record_count=(select count("id") from application_chat_record where chat_id = application_chat.id),
+        star_num         =(select count("id")
+                       from application_chat_record
+                       where chat_id = application_chat.id and vote_status = '0'),
+        mark_sum         =(select count("id")
+                       from application_chat_record
+                       where chat_id = application_chat.id and vote_status = '1')
+
+    """
+    for file in file_list:
+        chat_list = pickle.loads(file.read_bytes())
+        native_update(QuerySet(Chat).filter(id__in=[c.get('id') for c in chat_list]), sql)
+
+
 def to_v2_chat_record(chat_record):
     return ChatRecord(
         id=chat_record.get('id'),
         chat_id=chat_record.get('chat'),
         vote_status=chat_record.get('vote_status'),
         problem_text=chat_record.get('problem_text'),
-        answer_text=chat_record.get('answer_text'),
-        answer_text_list=chat_record.get('answer_text_list'),
+        answer_text=reset_application_chat_record_answer_text(chat_record.get('answer_text')),
+        answer_text_list=reset_application_chat_record_answer_text_list(chat_record.get('answer_text_list')),
         message_tokens=chat_record.get('message_tokens'),
         answer_tokens=chat_record.get('answer_tokens'),
         const=chat_record.get('const'),
-        details=chat_record.get('details'),
+        details=reset_application_chat_record_details(chat_record.get('details')),
         improve_paragraph_id_list=chat_record.get('improve_paragraph_id_list'),
         run_time=chat_record.get('run_time'),
-        index=chat_record.get('index')
+        index=chat_record.get('index'),
+        create_time=chat_record.get('create_time'),
+        update_time=chat_record.get('update_time')
     )
 
 
@@ -316,6 +368,10 @@ def import_():
                 'chat_record',
                 "导入对话日志记录",
                 check=import_check)
+    import_page(ImportQuerySet('chat'), 1, update_chat_chat_record_count,
+                'chat',
+                "处理对话日志数据",
+                check=lambda source_name, current_page: True)
 
 
 def check_application_empty():
