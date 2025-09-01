@@ -12,9 +12,9 @@ from functools import reduce
 
 from django.db.models import QuerySet
 
-from common.constants.permission_constants import ResourcePermission, ResourceAuthType
 from common.utils.rsa_util import rsa_long_decrypt, rsa_long_encrypt
-from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission, \
+    get_model_dir_path
 from models_provider.models import Model
 from system_manage.models import SystemSetting, AuthTargetType, WorkspaceUserResourcePermission
 from users.models import User
@@ -67,26 +67,12 @@ def update_qwen_model(model):
             model['credential'] = rsa_long_encrypt(model['credential'])
 
     if model.get('provider') == 'model_local_provider' and model.get('credential'):
-        credential = json.loads(rsa_long_decrypt(model.get('credential')))
-        cache_path = None
-
+        cache_dir, model_name = local_model_import(model.get('model_name'), model.get('model_type'))
         if model.get('model_type') == 'EMBEDDING':
-            cache_path = credential.get('cache_folder')
+            model['credential'] = json.dumps({'cache_folder': cache_dir})
         elif model.get('model_type') == 'RERANKER':
-            cache_path = credential.get('cache_dir')
-        model_name = model.get('model_name')
-        if model_name.startswith('/opt/maxkb/'):
-            model_name = model_name.replace('/opt/maxkb/', '/opt/maxkb-app/')
-        if cache_path and cache_path.startswith('/opt/maxkb/'):
-            cache_path = cache_path.replace('/opt/maxkb/', '/opt/maxkb-app/')
-
-        if model.get('model_type') == 'EMBEDDING':
-            model['credential'] = json.dumps({'cache_folder': cache_path})
-        elif model.get('model_type') == 'RERANKER':
-            model['credential'] = json.dumps({'cache_dir': cache_path})
+            model['credential'] = json.dumps({'cache_dir': cache_dir})
         model['model_name'] = model_name
-        if model['id'] != '42f63a3d-427e-11ef-b3ec-a8a1595801ab':
-            extract_model_zip(model_name)
         model['credential'] = rsa_long_encrypt(model['credential'])
 
     return model
@@ -97,53 +83,19 @@ import zipfile
 import shutil
 
 
-def extract_model_zip(model_full_path: str):
-    """
-    根据模型路径解压对应的 zip 文件到指定目录
-    :param model_full_path: 模型解压目标目录，例如 /opt/maxkb/model/openai
-    """
-    if not model_full_path:
-        print("❌ model_full_path 为空，跳过解压")
-        return
+def local_model_import(model_name, model_type):
+    if model_name.startswith('/'):
+        target_model_name = os.path.basename(model_name)
+    else:
+        target_model_name = 'models--' + model_name.replace('/', '--')
+    source_model = get_model_dir_path(target_model_name)
+    target = model_name
+    if os.path.exists(source_model):
+        target = os.path.join('/opt/maxkb-app/model/' + ('embedding/' if model_type == 'EMBEDDING' else ''),
+                              target_model_name)
+        shutil.copytree(get_model_dir_path(target_model_name), target)
 
-    # 去掉末尾斜杠，避免路径问题
-    model_full_path = model_full_path.rstrip("/")
-
-    # 提取目录名（如 openai）
-    model_dir_name = os.path.basename(model_full_path)
-
-    # ZIP 文件路径
-    source_zip_path = f"/data/local_model/{model_dir_name}.zip"
-
-    if not os.path.exists(source_zip_path):
-        print(f"❌ 未找到 ZIP 文件: {source_zip_path}")
-        return
-
-    # 如果目录已存在，可以选择清空，避免新旧文件混合
-    if os.path.exists(model_full_path):
-        print(f"⚠️ 目录已存在，将清空: {model_full_path}")
-        shutil.rmtree(model_full_path)
-
-    # 确保解压目录存在
-    os.makedirs(model_full_path, exist_ok=True)
-
-    # 解压 ZIP 文件
-    try:
-        with zipfile.ZipFile(source_zip_path, "r") as zip_ref:
-            zip_ref.extractall(model_full_path)
-        print(f"✅ 解压完成: {source_zip_path} -> {model_full_path}")
-
-        # 删除 ZIP 文件
-        try:
-            os.remove(source_zip_path)
-            print(f"🗑 已删除 ZIP 文件: {source_zip_path}")
-        except OSError as e:
-            print(f"⚠️ 删除 ZIP 文件失败: {source_zip_path} - {e}")
-
-    except zipfile.BadZipFile as e:
-        print(f"❌ ZIP 文件损坏: {source_zip_path} - {e}")
-    except Exception as e:
-        print(f"❌ 解压失败: {source_zip_path} - {e}")
+    return os.path.basename(target), target if model_name.startswith('/') else model_name
 
 
 def to_v2_model(model):
