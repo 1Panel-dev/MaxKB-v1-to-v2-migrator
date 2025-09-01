@@ -260,7 +260,9 @@ def to_v2_chat(chat):
                 star_num=0,
                 trample_num=0,
                 chat_record_count=0,
-                mark_sum=0)
+                mark_sum=0,
+                create_time=chat.get('create_time'),
+                update_time=chat.get('update_time'))
 
 
 def application_chat_import(file_list, source_name, current_page):
