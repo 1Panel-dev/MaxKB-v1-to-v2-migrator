@@ -1,6 +1,7 @@
 import os
 import pickle
 from functools import reduce
+import shutil
 import zipfile
 
 from django.db.models import QuerySet
@@ -12,6 +13,7 @@ from commons.util import import_page, ImportQuerySet, import_check, rename, to_w
 
 
 
+
 def extract_python_packages():
     """解压Python包到PIP_TARGET目录"""
     pip_target = os.environ.get('PIP_TARGET')
@@ -19,7 +21,9 @@ def extract_python_packages():
         print("PIP_TARGET环境变量未设置，跳过Python包解压")
         return
     
-    # 确保PIP_TARGET目录存在
+    # 使用shutil确保目录存在并处理权限
+    if os.path.exists(pip_target):
+        shutil.rmtree(pip_target)  # 清理已存在的目录
     os.makedirs(pip_target, exist_ok=True)
     
     # 查找python-packages.zip文件
@@ -31,11 +35,18 @@ def extract_python_packages():
         return
     
     try:
-        with zipfile.ZipFile(zip_path, 'r') as zipf:
-            zipf.extractall(pip_target)
+        # 使用shutil.unpack_archive作为zipfile的替代方案
+        shutil.unpack_archive(zip_path, pip_target)
         print(f"Python包已成功解压到: {pip_target}")
+        
+        # 设置目录权限（如果需要）
+        shutil.chown(pip_target, user=None, group=None)
+        
     except Exception as e:
         print(f"解压Python包时发生错误: {e}")
+        # 如果解压失败，清理部分解压的文件
+        if os.path.exists(pip_target):
+            shutil.rmtree(pip_target)
 
 def to_v2_tool(instance):
     icon = (

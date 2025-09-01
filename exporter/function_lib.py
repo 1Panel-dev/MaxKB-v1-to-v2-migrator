@@ -7,7 +7,7 @@
     @desc:
 """
 import os
-import zipfile
+import shutil
 from django.db.models import QuerySet
 from rest_framework import serializers
 
@@ -32,14 +32,10 @@ def zip_pip_target():
         return
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
     os.makedirs(data_dir, exist_ok=True)
-    zip_path = os.path.join(data_dir, 'python-packages.zip')
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(pip_target):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, pip_target)
-                zipf.write(file_path, arcname)
-    return zip_path
+    zip_path = os.path.join(data_dir, 'python-packages')
+    
+    archive_path = shutil.make_archive(zip_path, 'zip', pip_target)
+    return archive_path
 
 
 
