@@ -85,7 +85,8 @@ def update_qwen_model(model):
         elif model.get('model_type') == 'RERANKER':
             model['credential'] = json.dumps({'cache_dir': cache_path})
         model['model_name'] = model_name
-        extract_model_zip(model_name)
+        if model['id'] != '42f63a3d-427e-11ef-b3ec-a8a1595801ab':
+            extract_model_zip(model_name)
         model['credential'] = rsa_long_encrypt(model['credential'])
 
     return model
