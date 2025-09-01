@@ -109,6 +109,7 @@ def user_export(user_list, source_name, current_page):
 def local_model_export(model_list, source_name, current_page):
     for model in model_list:
         model_path = model.model_name
+        model_path = model_path[:-1] if 'model_path'.endswith('/') else model_path
         if not model.model_name.startswith("/"):
             credential = json.loads(rsa_long_decrypt(model.credential))
             cache_dir = credential.get('cache_dir') or credential.get('cache_folder')
@@ -118,7 +119,7 @@ def local_model_export(model_list, source_name, current_page):
         else:
             target_model = get_model_dir_path(source_name)
             if not os.path.exists(target_model):
-                shutil.copytree(model_path, get_model_dir_path(source_name))
+                shutil.copytree(model_path, os.path.join(get_model_dir_path(source_name), os.path.basename(model_path)))
 
 
 def export():
