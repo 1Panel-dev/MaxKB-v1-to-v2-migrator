@@ -117,9 +117,9 @@ def local_model_export(model_list, source_name, current_page):
         if not os.path.exists(model_path):
             pass
         else:
-            target_model = get_model_dir_path(source_name)
+            target_model = os.path.join(get_model_dir_path(source_name), os.path.basename(model_path))
             if not os.path.exists(target_model):
-                shutil.copytree(model_path, os.path.join(get_model_dir_path(source_name), os.path.basename(model_path)))
+                shutil.copytree(model_path, target_model)
 
 
 def export():
