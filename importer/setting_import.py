@@ -146,35 +146,6 @@ def extract_model_zip(model_full_path: str):
         print(f"❌ 解压失败: {source_zip_path} - {e}")
 
 
-def create_model_permissions(model, model_id):
-    permissions_to_create = []
-    creator_permission = WorkspaceUserResourcePermission(
-        target=model_id,
-        auth_target_type=AuthTargetType.MODEL,
-        permission_list=[ResourcePermission.VIEW, ResourcePermission.MANAGE],
-        workspace_id='default',
-        user_id=model.get('user'),
-        auth_type=ResourceAuthType.RESOURCE_PERMISSION_GROUP
-    )
-    permissions_to_create.append(creator_permission)
-
-    if model.get('permission') == 'PUBLIC':
-        users = User.objects.exclude(id=model.get('user')).values_list('id', flat=True)
-        for user_id in users:
-            public_permission = WorkspaceUserResourcePermission(
-                target=model_id,
-                auth_target_type=AuthTargetType.MODEL,
-                permission_list=[ResourcePermission.VIEW],
-                workspace_id='default',
-                user_id=user_id,
-                auth_type=ResourceAuthType.RESOURCE_PERMISSION_GROUP
-            )
-            permissions_to_create.append(public_permission)
-
-    if permissions_to_create:
-        WorkspaceUserResourcePermission.objects.bulk_create(permissions_to_create)
-
-
 def to_v2_model(model):
     """
     模型迁移逻辑：
@@ -199,9 +170,6 @@ def to_v2_model(model):
                       create_time=model.get('create_time'),
                       update_time=model.get('update_time'),
                       workspace_id='default')
-
-    # 创建相应权限
-    create_model_permissions(model, model_obj.id)
 
     return model_obj
 
