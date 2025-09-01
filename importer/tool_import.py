@@ -2,11 +2,11 @@ import pickle
 from functools import reduce
 
 from django.db.models import QuerySet
-
-from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 from system_manage.models import WorkspaceUserResourcePermission
 from tools.models import Tool, ToolFolder, ToolScope, ToolType
 from users.models import User
+
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 
 
 def to_v2_tool(instance):
@@ -51,7 +51,7 @@ def tool_import(file_list, source_name, current_page):
         tool_permission_list = reduce(lambda x, y: [*x, *y], [
             [
                 to_workspace_user_resource_permission(user_model.id, 'TOOL', tool.get('id'),
-                                                      permission_list=['MANAGE'] if
+                                                      permission_list=['MANAGE', 'VIEW'] if
                                                       str(user_model.id) == tool.get('id') else ['VIEW']) for user_model
                 in
                 user_model_list]
