@@ -357,12 +357,25 @@ def check_application_folder():
         ApplicationFolder(id='default', name='根目录', desc='default', user_id=None, workspace_id='default').save()
 
 
+def update_application_publish(file_list, source_name, current_page):
+    sql = """
+    update application
+    set is_publish = EXISTS(select 1 from application_version where application_id = application.id)
+    """
+    for file in file_list:
+        application_list = pickle.loads(file.read_bytes())
+        native_update(QuerySet(Application).filter(id__in=[a.get('id') for a in application_list]), sql)
+
+
 def import_():
     check_application_folder()
     import_page(ImportQuerySet('application'), 1, application_import, "application", "导入应用", check=import_check)
     import_page(ImportQuerySet('application_version'), 1, application_version_import, 'application_version',
                 "导入应用版本",
                 check=import_check)
+    import_page(ImportQuerySet('application'), 1, update_application_publish, 'application',
+                "修改应用发布状态",
+                check=True)
     import_page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key',
                 "导入应用api key",
                 check=import_check)
