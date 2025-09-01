@@ -101,7 +101,7 @@ def chat_record_export(chat_record_list, source_name, current_page):
 
 
 def application_dataset_mapping_export(application_dataset_mapping_list, source_name, current_page):
-    batch_list = [ApplicationDatasetMappingModel(application_dataset_mapping) for application_dataset_mapping in
+    batch_list = [ApplicationDatasetMappingModel(application_dataset_mapping).data for application_dataset_mapping in
                   application_dataset_mapping_list]
     save_batch_file(batch_list, source_name, current_page)
 
