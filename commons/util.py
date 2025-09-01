@@ -208,7 +208,7 @@ def ver_tuple(v: str):
 def to_workspace_user_resource_permission(user_id: str, auth_target_type, target_id, permission_list=None):
     from system_manage.models import WorkspaceUserResourcePermission
     if permission_list is None:
-        permission_list = ['MANAGE']
+        permission_list = ['MANAGE', 'VIEW']
     return WorkspaceUserResourcePermission(workspace_id='default', user_id=user_id, auth_target_type=auth_target_type,
                                            target=target_id,
                                            auth_type='RESOURCE_PERMISSION_GROUP', permission_list=permission_list)
