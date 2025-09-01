@@ -7,14 +7,14 @@
     @desc:
 """
 import os
+import pickle
 import re
+import shutil
 import zipfile
 from math import ceil
 from pathlib import Path
 
 from tqdm import tqdm
-import pickle
-import shutil
 
 from migrate import BASE_DIR, APP_DIR
 
@@ -67,9 +67,9 @@ def page(query_set, page_size, handler, source_name, desc, primary_key="id", che
     count = query_set.count()
 
     with tqdm(
-        range(count),
-        desc=desc,
-        bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}",
+            range(count),
+            desc=desc,
+            bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {postfix}",
     ) as pbar:
         last_id = None
         current_page = 1
@@ -83,8 +83,8 @@ def page(query_set, page_size, handler, source_name, desc, primary_key="id", che
                 else:
                     # 使用主键过滤，而不是 OFFSET
                     data_list = query.filter(**{f"{primary_key}__gt": last_id})[
-                        :page_size
-                    ]
+                                :page_size
+                                ]
 
                 if not data_list:
                     break
@@ -125,7 +125,7 @@ def import_page(query_set, page_size, handler, source_name, desc, primary_key="i
                 handler(data_list, source_name, i + 1)
                 pbar.refresh()
             pbar.update(page_size if offset + page_size <=
-                        count else count - offset)
+                                     count else count - offset)
 
 
 def get_dir_path(source_name, current_page):
@@ -198,3 +198,12 @@ def ver_tuple(v: str):
     except ValueError:
         return (0, 0, 0)
     return (major, minor, patch)
+
+
+def to_workspace_user_resource_permission(user_id: str, auth_target_type, target_id, permission_list=None):
+    from system_manage.models import WorkspaceUserResourcePermission
+    if permission_list is None:
+        permission_list = ['MANAGE']
+    return WorkspaceUserResourcePermission(workspace_id='default', user_id=user_id, auth_target_type=auth_target_type,
+                                           target=target_id,
+                                           auth_type='RESOURCE_PERMISSION_GROUP', permission_list=permission_list)
