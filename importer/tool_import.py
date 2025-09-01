@@ -1,5 +1,7 @@
+import os
 import pickle
 from functools import reduce
+import zipfile
 
 from django.db.models import QuerySet
 from system_manage.models import WorkspaceUserResourcePermission
@@ -8,6 +10,32 @@ from users.models import User
 
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 
+
+
+def extract_python_packages():
+    """解压Python包到PIP_TARGET目录"""
+    pip_target = os.environ.get('PIP_TARGET')
+    if not pip_target:
+        print("PIP_TARGET环境变量未设置，跳过Python包解压")
+        return
+    
+    # 确保PIP_TARGET目录存在
+    os.makedirs(pip_target, exist_ok=True)
+    
+    # 查找python-packages.zip文件
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+    zip_path = os.path.join(data_dir, 'python-packages.zip')
+    
+    if not os.path.exists(zip_path):
+        print(f"Python包文件不存在: {zip_path}")
+        return
+    
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zipf:
+            zipf.extractall(pip_target)
+        print(f"Python包已成功解压到: {pip_target}")
+    except Exception as e:
+        print(f"解压Python包时发生错误: {e}")
 
 def to_v2_tool(instance):
     icon = (
@@ -71,6 +99,9 @@ def check_tool_folder():
 
 def import_():
     check_tool_folder()
+
+    # 解压Python包
+    extract_python_packages()
 
     import_page(ImportQuerySet('function_lib'), 1, tool_import, "function_lib", "导入工具", check=import_check)
 
