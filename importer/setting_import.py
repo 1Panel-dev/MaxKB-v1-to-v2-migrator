@@ -84,16 +84,16 @@ import shutil
 
 
 def local_model_import(model_name, model_type):
-    if model_name.startswith('/'):
+    if os.path.isabs(model_name):
         target_model_name = os.path.basename(model_name)
     else:
         target_model_name = 'models--' + model_name.replace('/', '--')
-    source_model = get_model_dir_path(target_model_name)
+    source_model = os.path.join(get_model_dir_path('local_model'), target_model_name)
     target = model_name
     if os.path.exists(source_model):
         target = os.path.join('/opt/maxkb-app/model/' + ('embedding/' if model_type == 'EMBEDDING' else ''),
                               target_model_name)
-        shutil.copytree(get_model_dir_path(target_model_name), target)
+        shutil.copytree(source_model, target)
 
     return os.path.basename(target), target if model_name.startswith('/') else model_name
 
