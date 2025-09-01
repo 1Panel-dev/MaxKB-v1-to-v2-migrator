@@ -8,16 +8,16 @@
 """
 import json
 import os
-import zipfile
-
-from django.db.models import QuerySet
-from rest_framework import serializers
+import shutil
 
 from common.util.rsa_util import rsa_long_decrypt
+from django.db.models import QuerySet
+from rest_framework import serializers
 from setting.models import Model, SystemSetting, TeamMemberPermission, TeamMember
 from setting.models.log_management import Log
 from users.models import User
-from commons.util import page, save_batch_file
+
+from commons.util import page, save_batch_file, get_model_dir_path
 
 
 class LogModel(serializers.ModelSerializer):
@@ -55,87 +55,9 @@ def log_export(log_list, source_name, current_page):
     save_batch_file(batch_list, source_name, current_page)
 
 
-model_name_count_global = {}
-local_model_cache = []
-
-
 def model_export(model_list, source_name, current_page):
-    global model_name_count_global
-    batch_list = []
-
-    for model in model_list:
-        model_data = ModelModel(model).data
-
-        original_name = model_data['name']
-        count = model_name_count_global.get(original_name, 0)
-        if count > 0:
-            model_data['name'] = f"{original_name}{count}"
-        model_name_count_global[original_name] = count + 1
-        if model_data['provider'] == 'model_local_provider' and model_data.get('credential') and model_data[
-            'id'] != '42f63a3d-427e-11ef-b3ec-a8a1595801ab':
-            credential = json.loads(rsa_long_decrypt(model_data.get('credential')))
-            local_model_cache.append(credential.get('model_name'))
-        batch_list.append(model_data)
+    batch_list = [ModelModel(model).data for model in model_list]
     save_batch_file(batch_list, source_name, current_page)
-
-
-from migrate import BASE_DIR
-
-
-def zip_local_models():
-    unique_paths = set(path for path in local_model_cache if path)
-    for path in unique_paths:
-        zip_folder(path)
-
-
-# 打包本地模型到一个zip
-def zip_folder(folder_path: str, output_dir: str = f"{BASE_DIR}/data/local_model"):
-    """
-    根据给定的绝对路径压缩目录
-    :param folder_path: 模型的完整路径
-    :param output_dir: 压缩包存放目录
-    """
-    # 如果路径不存在，尝试替换最后一级目录为 models--xxx
-    if not os.path.exists(folder_path):
-        base_dir = os.path.dirname(folder_path)
-        folder_name = os.path.basename(os.path.normpath(folder_path))
-        alt_name = f"models--{folder_name}"
-        alt_path = os.path.join(base_dir, alt_name)
-
-        if os.path.exists(alt_path):
-            print(f"⚠️ 路径不存在，已自动修正为: {alt_path}")
-            folder_path = alt_path
-        else:
-            print(f"❌ 目录不存在: {folder_path} 或 {alt_path}")
-            return
-
-    if not os.path.isdir(folder_path):
-        print(f"⚠️ 路径不是目录: {folder_path}")
-        return
-
-    if not os.access(folder_path, os.R_OK | os.X_OK):
-        print(f"🚫 没有权限访问目录: {folder_path}")
-        return
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    folder_name = os.path.basename(os.path.normpath(folder_path))
-    zip_file_path = os.path.join(output_dir, f"{folder_name}.zip")
-
-    print(f"✅ 开始压缩: {folder_path} -> {zip_file_path}")
-
-    try:
-        with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(folder_path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.relpath(file_path, start=folder_path)
-                    zipf.write(file_path, arcname=arcname)
-
-        print(f"🎉 压缩完成: {zip_file_path}\n")
-
-    except PermissionError as e:
-        print(f"🚫 文件权限不足，压缩失败: {e}")
 
 
 def system_setting_export(system_setting_list, source_name, current_page):
@@ -184,6 +106,21 @@ def user_export(user_list, source_name, current_page):
     save_batch_file(batch_list, source_name, current_page)
 
 
+def local_model_export(model_list, source_name, current_page):
+    for model in model_list:
+        model_path = model.model_name
+        if not model.model_name.startswith("/"):
+            credential = json.loads(rsa_long_decrypt(model.credential))
+            cache_dir = credential.get('cache_dir') or credential.get('cache_folder')
+            model_path = os.path.join(cache_dir, 'models--' + model.model_name.replace('/', '--'))
+        if not os.path.exists(model_path):
+            pass
+        else:
+            target_model = get_model_dir_path(source_name)
+            if not os.path.exists(target_model):
+                shutil.copytree(model_path, get_model_dir_path(source_name))
+
+
 def export():
     page(QuerySet(Log), 100, log_export, "log", "导出操作日志")
     page(QuerySet(Model), 100, model_export, "model", "导出模型")
@@ -191,4 +128,6 @@ def export():
     page(QuerySet(TeamMemberPermission), 100, team_member_permission_export, "team_member_permission",
          "导出团队授权数据")
     page(QuerySet(User), 100, user_export, "user", "导出用户数据")
-    zip_local_models()
+    page(QuerySet(Model)
+         .exclude(model_name='/opt/maxkb/model/embedding/shibing624_text2vec-base-chinese')
+         .filter(provider='model_local_provider'), 1, local_model_export, "local_model", "导出本地模型")
