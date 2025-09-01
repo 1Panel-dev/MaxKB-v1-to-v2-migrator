@@ -133,6 +133,11 @@ def get_dir_path(source_name, current_page):
     return dir_path
 
 
+def get_model_dir_path(source_name):
+    dir_path = f"{BASE_DIR}/data/{source_name}/"
+    return dir_path
+
+
 def save_batch_file(data_list, source_name, current_page):
     dir_path = get_dir_path(source_name, current_page)
     base_path = f"{dir_path}/{current_page}.pickle"
