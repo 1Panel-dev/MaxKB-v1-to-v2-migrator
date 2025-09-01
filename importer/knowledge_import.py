@@ -8,6 +8,7 @@ from django.db.models import QuerySet
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 from knowledge.models import KnowledgeFolder, Knowledge, KnowledgeType, KnowledgeScope, Document, Paragraph, \
     ProblemParagraphMapping, Problem, Embedding, File, FileSourceType
+from application.models import ApplicationKnowledgeMapping
 from system_manage.models import WorkspaceUserResourcePermission
 
 
@@ -214,6 +215,20 @@ def embedding_import(file_list, source_name, current_page):
         rename(file)
 
 
+def to_v2_application_knowledge_mapping(application_dataset_mapping):
+    return ApplicationKnowledgeMapping(id=application_dataset_mapping.get('id'),
+                                       application_id=application_dataset_mapping.get('application'),
+                                       knowledge_id=application_dataset_mapping.get('dataset'))
+
+
+def application_dataset_mapping_import(file_list, source_name, current_page):
+    for file in file_list:
+        application_dataset_mapping_list = pickle.loads(file.read_bytes())
+        adm_model_list = [to_v2_application_knowledge_mapping(adm) for adm in application_dataset_mapping_list]
+        QuerySet(ApplicationKnowledgeMapping).bulk_create(adm_model_list)
+        rename(file)
+
+
 def check_knowledge_folder():
     if not QuerySet(KnowledgeFolder).filter(id='default').exists():
         KnowledgeFolder(id='default', name='根目录', desc='default', user_id=None, workspace_id='default').save()
@@ -231,6 +246,9 @@ def import_():
         "导入问题段落关联关系", check=import_check
     )
     import_page(ImportQuerySet('embedding'), 1, embedding_import, "embedding", "导入向量", check=import_check)
+    import_page(ImportQuerySet('application_dataset_mapping'), 1, application_dataset_mapping_import,
+                "application_dataset_mapping",
+                "导入应用和知识库的关联关系", check=import_check)
 
 
 def check_knowledge_empty():

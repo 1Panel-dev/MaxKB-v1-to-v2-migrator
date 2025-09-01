@@ -375,7 +375,7 @@ def import_():
                 check=import_check)
     import_page(ImportQuerySet('application'), 1, update_application_publish, 'application',
                 "修改应用发布状态",
-                check=True)
+                check=lambda source_name, current_page: True)
     import_page(ImportQuerySet('application_api_key'), 1, application_api_key_import, 'application_api_key',
                 "导入应用api key",
                 check=import_check)
