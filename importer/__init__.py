@@ -12,6 +12,7 @@ import sys
 import django
 
 from commons.util import contains_xpack
+from django.core.cache import cache
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'maxkb.settings')
 django.setup()
@@ -35,7 +36,6 @@ def app_import():
     if contains_xpack():
         from xpack.serializers.license.license_serializers import LicenseSerializers
         from common.constants.cache_version import Cache_Version
-        from django.core.cache import cache
         LicenseSerializers().refresh()
         version, get_key = Cache_Version.SYSTEM.value
         license_is_valid = cache.get(get_key('license_is_valid'), version=version)
@@ -43,7 +43,7 @@ def app_import():
             print("当前版本没有授权，请导入 License 文件！")
             sys.exit(1)
 
-     # 检查导入标记文件
+    # 检查导入标记文件
     import_flag_file = os.path.join(os.path.dirname(__file__), '..', '.import_completed')
 
     # 如果没有导入标记，则检查是否是空环境
@@ -71,3 +71,4 @@ def app_import():
     if contains_xpack():
         from .xpack_import import import_ as xpack_import
         xpack_import()
+    cache.clear()
