@@ -90,10 +90,9 @@ def local_model_import(model_name, model_type):
     else:
         target_model_name = 'models--' + model_name.replace('/', '--')
     source_model = os.path.join(get_model_dir_path('local_model'), target_model_name)
-    target = model_name
+    target = os.path.join('/opt/maxkb-app/model/' + ('embedding/' if model_type == 'EMBEDDING' else ''),
+                          target_model_name)
     if os.path.exists(source_model):
-        target = os.path.join('/opt/maxkb-app/model/' + ('embedding/' if model_type == 'EMBEDDING' else ''),
-                              target_model_name)
         if not os.path.exists(target):
             shutil.copytree(source_model, target)
 
