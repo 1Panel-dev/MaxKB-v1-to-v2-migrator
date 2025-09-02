@@ -91,7 +91,7 @@ def tool_import(file_list, source_name, current_page):
             [
                 to_workspace_user_resource_permission(user_model.id, 'TOOL', tool.get('id'),
                                                       permission_list=['MANAGE', 'VIEW'] if
-                                                      str(user_model.id) == tool.get('id') else ['VIEW']) for user_model
+                                                      str(user_model.id) == str(tool.get('id')) else ['VIEW']) for user_model
                 in
                 user_model_list]
             if tool.get('permission_type') == 'PUBLIC' else [
