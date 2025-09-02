@@ -12,41 +12,40 @@ from users.models import User
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 
 
-
-
 def extract_python_packages():
     """解压Python包到PIP_TARGET目录"""
     pip_target = os.environ.get('PIP_TARGET')
     if not pip_target:
         print("PIP_TARGET环境变量未设置，跳过Python包解压")
         return
-    
+
     # 使用shutil确保目录存在并处理权限
     if os.path.exists(pip_target):
         shutil.rmtree(pip_target)  # 清理已存在的目录
     os.makedirs(pip_target, exist_ok=True)
-    
+
     # 查找python-packages.zip文件
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
     zip_path = os.path.join(data_dir, 'python-packages.zip')
-    
+
     if not os.path.exists(zip_path):
         print(f"Python包文件不存在: {zip_path}")
         return
-    
+
     try:
         # 使用shutil.unpack_archive作为zipfile的替代方案
         shutil.unpack_archive(zip_path, pip_target)
         print(f"Python包已成功解压到: {pip_target}")
-        
+
         # 设置目录权限（如果需要）
         shutil.chown(pip_target, user=None, group=None)
-        
+
     except Exception as e:
         print(f"解压Python包时发生错误: {e}")
         # 如果解压失败，清理部分解压的文件
         if os.path.exists(pip_target):
             shutil.rmtree(pip_target)
+
 
 def to_v2_tool(instance):
     icon = (
@@ -90,8 +89,9 @@ def tool_import(file_list, source_name, current_page):
         tool_permission_list = reduce(lambda x, y: [*x, *y], [
             [
                 to_workspace_user_resource_permission(user_model.id, 'TOOL', tool.get('id'),
-                                                      permission_list=['MANAGE', 'VIEW'] if
-                                                      str(user_model.id) == str(tool.get('id')) else ['VIEW']) for user_model
+                                                      permission_list=(['MANAGE', 'VIEW'] if
+                                                                       str(user_model.id) == str(tool.get('id')) else [
+                                                          'VIEW'])) for user_model
                 in
                 user_model_list]
             if tool.get('permission_type') == 'PUBLIC' else [
