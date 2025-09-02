@@ -127,10 +127,10 @@ def to_v2_model(model):
                       workspace_id='default')
     global model_name_count_global
 
-    original_name = model_obj['name']
+    original_name = model_obj.name
     count = model_name_count_global.get(original_name, 0)
     if count > 0:
-        model_obj['name'] = f"{original_name}{count}"
+        model_obj.name = f"{original_name}{count}"
     model_name_count_global[original_name] = count + 1
 
     return model_obj
