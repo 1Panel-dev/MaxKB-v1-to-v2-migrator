@@ -177,8 +177,8 @@ def paragraph_import(file_list, source_name, current_page):
 
                 content = (
                     content
-                    .replace('/api/file/', '.oss/file/')
-                    .replace('/api/image/', '.oss/file/')
+                    .replace('/api/file/', './oss/file/')
+                    .replace('/api/image/', './oss/file/')
                 )
 
                 paragraph = Paragraph(
