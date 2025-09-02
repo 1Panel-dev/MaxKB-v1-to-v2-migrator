@@ -98,6 +98,9 @@ def local_model_import(model_name, model_type):
     return os.path.basename(target), target if model_name.startswith('/') else model_name
 
 
+model_name_count_global = {}
+
+
 def to_v2_model(model):
     """
     模型迁移逻辑：
@@ -122,6 +125,13 @@ def to_v2_model(model):
                       create_time=model.get('create_time'),
                       update_time=model.get('update_time'),
                       workspace_id='default')
+    global model_name_count_global
+
+    original_name = model_obj['name']
+    count = model_name_count_global.get(original_name, 0)
+    if count > 0:
+        model_obj['name'] = f"{original_name}{count}"
+    model_name_count_global[original_name] = count + 1
 
     return model_obj
 
