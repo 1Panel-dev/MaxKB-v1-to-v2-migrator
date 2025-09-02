@@ -212,3 +212,41 @@ def to_workspace_user_resource_permission(user_id: str, auth_target_type, target
     return WorkspaceUserResourcePermission(workspace_id='default', user_id=user_id, auth_target_type=auth_target_type,
                                            target=target_id,
                                            auth_type='RESOURCE_PERMISSION_GROUP', permission_list=permission_list)
+
+
+import pickle
+from functools import wraps
+
+
+def preserve_time_fields(model_class, *fields):
+    """
+    装饰器：临时禁用模型时间字段的 auto_now/auto_now_add
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # 记录原始配置
+            field_settings = {
+                name: (f.auto_now_add, f.auto_now)
+                for name in fields
+                for f in [model_class._meta.get_field(name)]
+            }
+            try:
+                # 禁用自动更新时间
+                for name in fields:
+                    field = model_class._meta.get_field(name)
+                    field.auto_now_add = False
+                    field.auto_now = False
+
+                return func(*args, **kwargs)
+            finally:
+                # 恢复原配置
+                for name, (auto_now_add, auto_now) in field_settings.items():
+                    field = model_class._meta.get_field(name)
+                    field.auto_now_add = auto_now_add
+                    field.auto_now = auto_now
+
+        return wrapper
+
+    return decorator

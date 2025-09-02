@@ -13,7 +13,7 @@ import uuid_utils.compat as uuid
 
 from application.models import ApplicationAccessToken
 from common.constants.permission_constants import RoleConstants
-from commons.util import import_page, ImportQuerySet, import_check, rename
+from commons.util import import_page, ImportQuerySet, import_check, rename, preserve_time_fields
 from knowledge.models import File, FileSourceType
 from maxkb.const import CONFIG
 from role_setting.models import UserRoleRelation
@@ -322,7 +322,7 @@ def to_v2_log(log):
     )
     return log_obj
 
-
+@preserve_time_fields(Log, "create_time", "update_time")
 def log_import(log_list, source_name, current_page):
     for log in log_list:
         log_list = pickle.loads(log.read_bytes())
