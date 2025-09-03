@@ -279,7 +279,7 @@ def to_v2_chat(chat):
                 update_time=chat.get('update_time'))
 
 
-@preserve_time_fields(Chat, "create time", "update time")
+@preserve_time_fields(Chat, "create_time", "update_time")
 def application_chat_import(file_list, source_name, current_page):
     for file in file_list:
         chat_list = pickle.loads(file.read_bytes())
