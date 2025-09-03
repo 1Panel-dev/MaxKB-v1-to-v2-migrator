@@ -19,7 +19,8 @@ from django.db.models import QuerySet
 from common.db.search import native_update
 from knowledge.models import File
 
-from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission, \
+    preserve_time_fields
 from system_manage.models import WorkspaceUserResourcePermission
 
 
@@ -39,7 +40,20 @@ def to_v2_node(node):
         node['type'] = 'tool-lib-node'
         node_data = node.get('properties').get('node_data')
         node_data['tool_lib_id'] = node_data.pop('function_lib_id')
+    elif node_type == 'application-node':
+        node_data = node.get('properties').get('node_data')
+        node_data['icon'] = get_v2_icon(node_data['icon'])
     return node
+
+
+def get_v2_icon(icon):
+    if icon == '/ui/favicon.ico':
+        return "./favicon.ico"
+    elif icon.startswith('/api/image/'):
+        return icon.replace("/api/image/", './oss/file/')
+    elif icon.startswith('/api/file/'):
+        return icon.replace("/api/file/", './oss/file/')
+    return icon
 
 
 def to_v2_workflow(workflow):
@@ -265,6 +279,7 @@ def to_v2_chat(chat):
                 update_time=chat.get('update_time'))
 
 
+@preserve_time_fields(Chat, "create time", "update time")
 def application_chat_import(file_list, source_name, current_page):
     for file in file_list:
         chat_list = pickle.loads(file.read_bytes())
