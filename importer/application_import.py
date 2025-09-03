@@ -31,7 +31,7 @@ def to_v2_node(node):
         node_data = node.get('properties').get('node_data')
         node_data['knowledge_id_list'] = node_data.pop('dataset_id_list')
         node_data['knowledge_setting'] = node_data.pop('dataset_setting')
-        node_data['show_knowledge'] = True
+        node_data['show_knowledge'] = False
 
     elif node_type == 'function-node':
         node['type'] = 'tool-node'
@@ -43,6 +43,9 @@ def to_v2_node(node):
     elif node_type == 'application-node':
         node_data = node.get('properties').get('node_data')
         node_data['icon'] = get_v2_icon(node_data['icon'])
+    elif node_type == 'reranker-node':
+        node_data = node.get('properties').get('node_data')
+        node_data['show_knowledge'] = False
     return node
 
 
