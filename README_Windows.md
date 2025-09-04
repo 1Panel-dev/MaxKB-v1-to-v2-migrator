@@ -1,42 +1,15 @@
 # Windows 脚本使用说明
 
-本项目现在支持 Windows 系统，提供了批处理文件(.bat)和 PowerShell 脚本(.ps1)两种版本。
+本项目现在支持 Windows 系统，提供了PowerShell脚本(.ps1)。
 
 ## 脚本文件说明
-
-### 批处理文件 (.bat)
-- `export_v1_data.bat` - v1数据导出脚本（批处理版本）
-- `import_v2_data.bat` - v2数据导入脚本（批处理版本）
 
 ### PowerShell 脚本 (.ps1)
 - `export_v1_data.ps1` - v1数据导出脚本（PowerShell版本）
 - `import_v2_data.ps1` - v2数据导入脚本（PowerShell版本）
 
-## 使用方法
 
-### 方法一：使用批处理文件
-
-#### 1. 导出 v1 数据
-```cmd
-export_v1_data.bat <v1_container_name>
-```
-
-示例：
-```cmd
-export_v1_data.bat maxkb
-```
-
-#### 2. 导入到 v2
-```cmd
-import_v2_data.bat <v2_container_name>
-```
-
-示例：
-```cmd
-import_v2_data.bat maxkb-v2
-```
-
-### 方法二：使用 PowerShell 脚本（推荐）
+### 使用 PowerShell 脚本（推荐）
 
 #### 1. 导出 v1 数据
 ```powershell
@@ -54,11 +27,6 @@ import_v2_data.bat maxkb-v2
 ```
 
 示例：
-```powershell
-.\import_v2_data.ps1 -ContainerName maxkb-v2
-```
-
-## PowerShell 执行策略
 
 如果无法执行 PowerShell 脚本，可能需要修改执行策略：
 
@@ -73,11 +41,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
 ```
 
 ## 功能特性
-
-### 批处理版本 (.bat)
-- 兼容性好，所有 Windows 版本都支持
-- 基本的错误检查和状态提示
-- 简单的控制台输出
 
 ### PowerShell 版本 (.ps1)
 - 更好的错误处理机制
@@ -105,9 +68,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
 2. **权限不足**
    - 确保 Docker Desktop 正在运行
    - 以管理员身份运行终端（如果需要）
-
-3. **PowerShell 脚本无法执行**
-   - 检查执行策略设置
    - 使用完整路径运行脚本
 
 4. **文件路径问题**
