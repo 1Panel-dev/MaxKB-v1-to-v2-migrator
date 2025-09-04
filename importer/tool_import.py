@@ -19,9 +19,6 @@ def extract_python_packages():
         print("PIP_TARGET环境变量未设置，跳过Python包解压")
         return
 
-    # 使用shutil确保目录存在并处理权限
-    if os.path.exists(pip_target):
-        shutil.rmtree(pip_target)  # 清理已存在的目录
     os.makedirs(pip_target, exist_ok=True)
 
     # 查找python-packages.zip文件
