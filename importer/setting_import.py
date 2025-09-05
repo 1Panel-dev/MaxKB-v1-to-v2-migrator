@@ -156,7 +156,7 @@ def model_import(file_list, source_name, current_page):
             [
                 to_workspace_user_resource_permission(user.id, 'MODEL', model.get('id'),
                                                       permission_list=(['MANAGE', 'VIEW'] if
-                                                                       str(user.id) == str(model.get('id')) else [
+                                                                       str(user.id) == str(model.get('user')) else [
                                                           'VIEW'])) for user in
                 user_model_list]
             if model.get('permission_type') == 'PUBLIC' else [
