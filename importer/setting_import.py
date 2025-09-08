@@ -23,7 +23,7 @@ from users.models import User
 def to_v2_user(user):
     return User(id=user.get('id'),
                 email=user.get('email'),
-                phone=user.get('phone'),
+                phone=user.get('phone',''),
                 nick_name=user.get('nick_name'),
                 username=user.get('username'),
                 password=user.get('password'),
