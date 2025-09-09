@@ -24,18 +24,19 @@ ________________________________________________________________________________
 
 1. **导出v1数据**
    ```bash
-   # 在v1机器上下载v1-to-v2-migrator
-   cd v1-to-v2-migrator
+   # 在v1机器上下载 MaxKB-v1-to-v2-migrator-<version>.zip
+   unzip MaxKB-v1-to-v2-migrator-<version>.zip 
+   cd  MaxKB-v1-to-v2-migrator-<version>
    bash export_v1_data.sh <v1_container_name>
 
-   # 执行后v1-to-v2-migrator中会多一个migrate.zip
+   # 执行后 MaxKB-v1-to-v2-migrator-<version> 中会多一个migrate.zip
    # 将v1-to-v2-migrator复制到v2所在的机器上
    ```
 
 2. **数据导入至v2**
    ```bash
    # 在v2机器上，确保v2.1.0版本的容器已经启动, 专业版和企业版需要在启动后手动导入license
-   cd v1-to-v2-migrator
+   cd MaxKB-v1-to-v2-migrator-<version>
    bash import_v2_data.sh <v2_container_name>
    ```
 
