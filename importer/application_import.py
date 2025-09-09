@@ -132,9 +132,13 @@ def application_import(file_list, source_name, current_page):
         # 插入简易版本发布信息
         QuerySet(ApplicationVersion).bulk_create(simple_app_version_list)
 
-        # 删除授权相关数据
-        QuerySet(WorkspaceUserResourcePermission).filter(
-            target__in=[application_model.id for application_model in application_model_list]).delete()
+        for application_model in application_model_list:
+            # 删除授权相关数据
+            QuerySet(WorkspaceUserResourcePermission).filter(
+                target=application_model.id,
+                user_id=application_model.user_id
+            ).delete()
+
         # 插入授权数据
         application_permission_list = [
             to_workspace_user_resource_permission(application_model.user_id, 'APPLICATION', application_model.id) for

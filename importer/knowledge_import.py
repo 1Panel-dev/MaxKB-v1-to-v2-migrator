@@ -4,12 +4,12 @@ import uuid
 
 from django.db import models
 from django.db.models import QuerySet
-
-from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 from knowledge.models import KnowledgeFolder, Knowledge, KnowledgeType, KnowledgeScope, Document, Paragraph, \
     ProblemParagraphMapping, Problem, Embedding, File, FileSourceType
-from application.models import ApplicationKnowledgeMapping
 from system_manage.models import WorkspaceUserResourcePermission
+
+from application.models import ApplicationKnowledgeMapping
+from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
 
 
 def to_v2_knowledge(knowledge):
@@ -83,8 +83,9 @@ def knowledge_import(file_list, source_name, current_page):
         knowledge_model_list = [to_v2_knowledge(item) for item in knowledge_list]
         QuerySet(Knowledge).bulk_create(knowledge_model_list)
         # 删除授权相关数据
-        QuerySet(WorkspaceUserResourcePermission).filter(
-            target__in=[knowledge_model.id for knowledge_model in knowledge_model_list]).delete()
+        for knowledge_model in knowledge_model_list:
+            QuerySet(WorkspaceUserResourcePermission).filter(
+                target__in=knowledge_model.id, user_id=knowledge_model.user_id).delete()
         # 插入授权数据
         knowledge_permission_list = [
             to_workspace_user_resource_permission(knowledge_model.user_id, 'KNOWLEDGE', knowledge_model.id)
