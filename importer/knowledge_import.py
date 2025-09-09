@@ -85,7 +85,7 @@ def knowledge_import(file_list, source_name, current_page):
         # 删除授权相关数据
         for knowledge_model in knowledge_model_list:
             QuerySet(WorkspaceUserResourcePermission).filter(
-                target__in=knowledge_model.id, user_id=knowledge_model.user_id).delete()
+                target=knowledge_model.id, user_id=knowledge_model.user_id).delete()
         # 插入授权数据
         knowledge_permission_list = [
             to_workspace_user_resource_permission(knowledge_model.user_id, 'KNOWLEDGE', knowledge_model.id)
