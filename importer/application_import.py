@@ -324,7 +324,7 @@ def reset_application_chat_record_answer_text_list(answer_text_list):
 def reset_application_chat_record_answer_text(answer_text):
     result = re.sub(rf'/api/file/({uuid_pattern})', r'./oss/file/\1', answer_text)
     result = re.sub(rf'/api/image/({uuid_pattern})', r'./oss/file/\1', result)
-    return result
+    return result[0:40960]
 
 
 def update_chat_chat_record_count(file_list, source_name, current_page):
@@ -350,7 +350,7 @@ def to_v2_chat_record(chat_record):
         chat_id=chat_record.get('chat'),
         vote_status=chat_record.get('vote_status'),
         problem_text=chat_record.get('problem_text'),
-        answer_text=reset_application_chat_record_answer_text((chat_record.get('answer_text', '') or '')[0:40960]),
+        answer_text=reset_application_chat_record_answer_text(chat_record.get('answer_text', '') or ''),
         answer_text_list=reset_application_chat_record_answer_text_list(chat_record.get('answer_text_list')),
         message_tokens=chat_record.get('message_tokens'),
         answer_tokens=chat_record.get('answer_tokens'),
