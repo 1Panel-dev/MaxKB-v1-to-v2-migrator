@@ -350,7 +350,7 @@ def to_v2_chat_record(chat_record):
         chat_id=chat_record.get('chat'),
         vote_status=chat_record.get('vote_status'),
         problem_text=chat_record.get('problem_text'),
-        answer_text=reset_application_chat_record_answer_text(chat_record.get('answer_text')),
+        answer_text=reset_application_chat_record_answer_text((chat_record.get('answer_text', '') or '')[0:40960]),
         answer_text_list=reset_application_chat_record_answer_text_list(chat_record.get('answer_text_list')),
         message_tokens=chat_record.get('message_tokens'),
         answer_tokens=chat_record.get('answer_tokens'),
