@@ -97,9 +97,11 @@ def team_member_permission_export(team_member_permission_list, source_name, curr
     save_batch_file(batch_list, source_name, current_page)
 
 
-def user_export(user_list, source_name, current_page):
-    nick_name_count = {}
+nick_name_count = {}
 
+
+def user_export(user_list, source_name, current_page):
+    global nick_name_count
     batch_list = []
     for user in user_list:
         user_data = UserModel(user).data

@@ -19,12 +19,27 @@ from models_provider.models import Model
 from system_manage.models import SystemSetting, AuthTargetType, WorkspaceUserResourcePermission
 from users.models import User
 
+nick_name_count = {}
+
 
 def to_v2_user(user):
+    global nick_name_count
+    nick_name = user.get('nick_name')
+    if not nick_name:
+        nick_name = user.get('username', '')
+
+    original_nick_name = nick_name
+    # 处理 nick_name 重复问题
+    if original_nick_name in nick_name_count:
+        nick_name_count[original_nick_name] += 1
+        nick_name = f"{original_nick_name}{nick_name_count[original_nick_name]}"
+    else:
+        nick_name_count[original_nick_name] = 0
+
     return User(id=user.get('id'),
                 email=user.get('email'),
-                phone=user.get('phone','') or '',
-                nick_name=user.get('nick_name'),
+                phone=user.get('phone', '') or '',
+                nick_name=nick_name,
                 username=user.get('username'),
                 password=user.get('password'),
                 role=user.get('role'),
