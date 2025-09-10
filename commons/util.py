@@ -140,11 +140,15 @@ def get_model_dir_path(source_name):
 
 def save_batch_file(data_list, source_name, current_page):
     dir_path = get_dir_path(source_name, current_page)
-    base_path = f"{dir_path}/{current_page}.pickle"
+    base_path = f"{dir_path}/{current_page}.pickle_tmp"
+    if os.path.exists(base_path):
+        os.remove(base_path)
+    ready_name = f"{dir_path}/{current_page}.pickle"
     os.makedirs(dir_path, exist_ok=True)
     with open(base_path, 'wb') as f:
         # 使用pickle的dump方法将对象序列化并写入文件
         pickle.dump(data_list, f)
+    os.replace(base_path, ready_name)
 
 
 def rename(file):
