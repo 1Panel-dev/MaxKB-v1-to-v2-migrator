@@ -22,6 +22,7 @@ from xpack.models import PlatformUser, SystemApiKey, PlatformSource, SystemParam
 from xpack.models.application_setting import ApplicationSetting
 from xpack.models.platform import Platform
 from system_manage.models import Log
+from application.models import Application
 
 
 def convert_image_path(image_path):
@@ -89,8 +90,15 @@ def application_setting_import(application_setting_list, source_name, current_pa
         # 删除数据
         ApplicationSetting.objects.filter(
             application_id__in=[s.application_id for s in application_setting_model_list]).delete()
-        # 插入数据
-        ApplicationSetting.objects.bulk_create(application_setting_model_list)
+        # 检查对应的应用是否存在
+        existing_app_ids = set(Application.objects.filter(
+            id__in=[s.application_id for s in application_setting_model_list]
+        ).values_list('id', flat=True))
+
+        # 只创建对应应用存在的记录
+        valid_application_settings = [s for s in application_setting_model_list
+                                      if s.application_id in existing_app_ids]
+        ApplicationSetting.objects.bulk_create(valid_application_settings)
         # 修改标识
         rename(application_setting)
 
@@ -306,6 +314,7 @@ def import_user_relation():
     if user_role_relations:
         UserRoleRelation.objects.bulk_create(user_role_relations, ignore_conflicts=True)
 
+
 def to_v2_log(log):
     log_obj = Log(
         id=log.get('id'),
@@ -322,6 +331,7 @@ def to_v2_log(log):
     )
     return log_obj
 
+
 @preserve_time_fields(Log, "create_time", "update_time")
 def log_import(log_list, source_name, current_page):
     for log in log_list:
@@ -335,16 +345,18 @@ def log_import(log_list, source_name, current_page):
 
 
 def import_():
-    import_page(ImportQuerySet('application_setting'), 1, application_setting_import, "application_setting", "导入应用设置",
-         check=import_check)
+    import_page(ImportQuerySet('application_setting'), 1, application_setting_import, "application_setting",
+                "导入应用设置",
+                check=import_check)
     import_page(ImportQuerySet('platform'), 1, platform_import, "platform", "导入三方平台", check=import_check)
     import_page(ImportQuerySet('auth_config'), 1, auth_config_import, "auth_config", "导入认证配置", check=import_check)
     import_page(ImportQuerySet('platform_source'), 1, platform_source_import, "platform_source", "导出三方平台认证",
-         check=import_check)
+                check=import_check)
     import_page(ImportQuerySet('platform_user'), 1, platform_user_import, "platform_user", "导入三方平台用户",
-         check=import_check)
+                check=import_check)
     import_page(ImportQuerySet('system_api_key'), 1, system_api_key_import, "system_api_key", "导入系统api密钥",
-         check=import_check)
-    import_page(ImportQuerySet('system_params'), 1, system_params_import, "system_params", "导入系统参数", check=import_check)
+                check=import_check)
+    import_page(ImportQuerySet('system_params'), 1, system_params_import, "system_params", "导入系统参数",
+                check=import_check)
     import_user_relation()
     import_page(ImportQuerySet('log'), 1, log_import, "log", "导入操作日志", check=import_check)
