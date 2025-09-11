@@ -145,7 +145,7 @@ def paragraph_import(file_list, source_name, current_page):
     for file in file_list:
         paragraph_list = pickle.loads(file.read_bytes())
 
-        QuerySet(Paragraph).filter(id__in=[p.id for p in paragraph_list]).delete()
+        QuerySet(Paragraph).filter(id__in=[p.get('id') for p in paragraph_list]).delete()
         # 按 document_id 分组并为每组分配递增的 position
         from collections import defaultdict
         document_paragraphs = defaultdict(list)
