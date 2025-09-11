@@ -157,11 +157,18 @@ def paragraph_import(file_list, source_name, current_page):
         document_ids = list(document_paragraphs.keys())
         existing_positions = {}
 
-        for doc_id in document_ids:
-            max_position = QuerySet(Paragraph).filter(document=doc_id).aggregate(
-                max_pos=models.Max('position')
-            )['max_pos']
-            existing_positions[doc_id] = max_position or 0
+        # 优化：使用单次查询获取所有文档的最大position，避免N+1查询问题
+        if document_ids:
+            max_positions = (QuerySet(Paragraph)
+                             .filter(document__in=document_ids)
+                             .values('document')
+                             .annotate(max_pos=models.Max('position'))
+                             .values_list('document', 'max_pos'))
+
+            # 构建字典，设置默认值为0
+            existing_positions = {doc_id: 0 for doc_id in document_ids}
+            for doc_id, max_pos in max_positions:
+                existing_positions[doc_id] = max_pos or 0
 
         paragraph_model_list = []
         for document_id, paragraphs in document_paragraphs.items():
