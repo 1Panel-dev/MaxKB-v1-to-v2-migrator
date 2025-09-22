@@ -364,6 +364,7 @@ def to_v2_chat_record(chat_record):
     )
 
 
+@preserve_time_fields(ChatRecord, "create_time", "update_time")
 def application_chat_record_import(file_list, source_name, current_page):
     for file in file_list:
         chat_record_list = pickle.loads(file.read_bytes())
