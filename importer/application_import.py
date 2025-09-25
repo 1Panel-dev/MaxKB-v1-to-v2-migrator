@@ -269,13 +269,19 @@ def application_public_access_client_import(file_list, source_name, current_page
         rename(file)
 
 
+def to_v2_asker(asker):
+    if isinstance(asker, dict):
+        return {**asker, 'username': asker.get('user_name')}
+    return {'username': str(asker)}
+
+
 def to_v2_chat(chat):
     return Chat(id=chat.get('id'),
                 application_id=chat.get('application'),
                 abstract=chat.get('abstract'),
                 chat_user_id=chat.get('client_id'),
                 chat_user_type='ANONYMOUS_USER',
-                asker=chat.get('asker'),
+                asker=to_v2_asker(chat.get('asker')),
                 is_deleted=chat.get('is_deleted'),
                 meta={},
                 star_num=0,
