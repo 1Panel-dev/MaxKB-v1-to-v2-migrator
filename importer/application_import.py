@@ -14,14 +14,13 @@ import re
 from application.models import Application, ApplicationFolder, ApplicationVersion, ApplicationApiKey, \
     ApplicationAccessToken, ApplicationChatUserStats, Chat, ChatRecord
 from application.serializers.application import ApplicationOperateSerializer
-from django.db.models import QuerySet
-
 from common.db.search import native_update
+from django.db.models import QuerySet
 from knowledge.models import File
+from system_manage.models import WorkspaceUserResourcePermission
 
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission, \
     preserve_time_fields
-from system_manage.models import WorkspaceUserResourcePermission
 
 
 def to_v2_node(node):
@@ -253,10 +252,13 @@ def to_v2_application_chat_user_stats(application_public_access_client):
         chat_user_type="ANONYMOUS_USER",
         application_id=application_public_access_client.get('application'),
         access_num=application_public_access_client.get('access_num'),
-        intraday_access_num=application_public_access_client.get('intraday_access_num')
+        intraday_access_num=application_public_access_client.get('intraday_access_num'),
+        create_time=application_public_access_client.get('create_time'),
+        update_time=application_public_access_client.get('update_time')
     )
 
 
+@preserve_time_fields(ApplicationChatUserStats, "create_time", "update_time")
 def application_public_access_client_import(file_list, source_name, current_page):
     for file in file_list:
         application_public_access_client_list = pickle.loads(file.read_bytes())
