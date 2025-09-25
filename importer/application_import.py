@@ -39,7 +39,7 @@ def to_v2_node(node):
         node['type'] = 'tool-lib-node'
         node_data = node.get('properties').get('node_data')
         node_data['tool_lib_id'] = node_data.pop('function_lib_id')
-        node_data['icon'] = get_v2_icon(node_data['icon'])
+        node_data['icon'] = to_v2_tool_icon(node_data.get('icon', ''))
     elif node_type == 'application-node':
         node_data = node.get('properties').get('node_data')
         node_data['icon'] = get_v2_icon(node_data['icon'])
@@ -47,6 +47,10 @@ def to_v2_node(node):
         node_data = node.get('properties').get('node_data')
         node_data['show_knowledge'] = False
     return node
+
+
+def to_v2_tool_icon(icon):
+    return icon.replace('/ui/fx/', './tool/').replace('/api/file/', './oss/file/').replace('/ui/favicon.ico', '')
 
 
 def get_v2_icon(icon):
