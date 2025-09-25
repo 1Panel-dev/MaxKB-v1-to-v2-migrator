@@ -40,6 +40,7 @@ def to_v2_node(node):
         node['type'] = 'tool-lib-node'
         node_data = node.get('properties').get('node_data')
         node_data['tool_lib_id'] = node_data.pop('function_lib_id')
+        node_data['icon'] = get_v2_icon(node_data['icon'])
     elif node_type == 'application-node':
         node_data = node.get('properties').get('node_data')
         node_data['icon'] = get_v2_icon(node_data['icon'])
