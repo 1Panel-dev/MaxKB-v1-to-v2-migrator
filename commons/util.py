@@ -10,7 +10,7 @@ import os
 import pickle
 import re
 import shutil
-import zipfile
+import tarfile
 from math import ceil
 from pathlib import Path
 
@@ -158,21 +158,22 @@ def rename(file):
 
 
 def zip_folder():
-    folder_path = f"{BASE_DIR}/data/"
-    zip_name = f"{BASE_DIR}/migrate"
-    if os.path.exists(zip_name + '.zip'):
+    folder_path = Path(f"{BASE_DIR}/data/")
+    tar_path = f"{BASE_DIR}/migrate.tar"
+    if os.path.exists(tar_path):
         return
-    shutil.make_archive(zip_name, 'zip', folder_path)
+    with tarfile.open(tar_path, 'w') as tf:
+        tf.add(folder_path, arcname='.')
 
 
 def un_zip():
-    zip_name = Path(f"{BASE_DIR}/migrate.zip")
+    tar_path = Path(f"{BASE_DIR}/migrate.tar")
     extract_dir = Path(f"{BASE_DIR}/data/")
     if os.path.exists(extract_dir):
         return
     extract_dir.mkdir(exist_ok=True)
-    with zipfile.ZipFile(zip_name, 'r') as zip_ref:
-        zip_ref.extractall(extract_dir)
+    with tarfile.open(tar_path, 'r') as tf:
+        tf.extractall(extract_dir)
 
 
 def contains_xpack():

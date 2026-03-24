@@ -37,8 +37,8 @@ if ! docker ps --format "{{.Names}}" | grep -q "^$V2_CONTAINER$"; then
 fi
 
 # 检查迁移数据文件是否存在
-if [ ! -f "./migrate.zip" ]; then
-    echo -e "${RED}[错误]${NC} 迁移数据文件 ./migrate.zip 不存在"
+if [ ! -f "./migrate.tar" ]; then
+    echo -e "${RED}[错误]${NC} 迁移数据文件 ./migrate.tar 不存在"
     echo -e "${YELLOW}[提示]${NC} 请先运行 export_v1_data.sh 导出v1数据"
     exit 1
 fi
@@ -61,7 +61,7 @@ echo -e "${GREEN}[完成]${NC} 数据导入完成"
 
 # 清理v2容器中的临时文件
 echo -e "${MAGENTA}[步骤3]${NC} 清理临时文件..."
-docker exec "$V2_CONTAINER" rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.zip 2>/dev/null || true
+docker exec "$V2_CONTAINER" rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.tar 2>/dev/null || true
 echo -e "${GREEN}[完成]${NC} 临时文件清理完成"
 
 echo

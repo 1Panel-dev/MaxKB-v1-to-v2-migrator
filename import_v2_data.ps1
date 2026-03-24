@@ -61,8 +61,8 @@ try {
 
     # 检查迁移数据文件是否存在
     Write-Info "检查迁移数据文件..."
-    if (-not (Test-Path "./migrate.zip")) {
-        Write-Error "迁移数据文件 ./migrate.zip 不存在"
+    if (-not (Test-Path "./migrate.tar")) {
+        Write-Error "迁移数据文件 ./migrate.tar 不存在"
         Write-Warning "请先运行 export_v1_data.ps1 导出v1数据"
         exit 1
     }
@@ -85,7 +85,7 @@ try {
 
     # 清理v2容器中的临时文件
     Write-Step "清理临时文件..."
-    docker exec $ContainerName rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.zip 2>$null
+    docker exec $ContainerName rm -rf /opt/maxkb-app/v1-to-v2-migrator/migrate.tar 2>$null
     Write-Success "临时文件清理完成"
 
     Write-Host

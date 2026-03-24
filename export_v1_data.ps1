@@ -77,16 +77,16 @@ try {
 
     # 复制数据到主机
     Write-Step "复制导出的数据到主机..."
-    docker cp "${ContainerName}:/opt/maxkb/app/v1-to-v2-migrator/migrate.zip" "./migrate.zip"
+    docker cp "${ContainerName}:/opt/maxkb/app/v1-to-v2-migrator/migrate.tar" "./migrate.tar"
     if ($LASTEXITCODE -ne 0) {
         throw "复制数据文件失败"
     }
-    Write-Success "数据文件已保存到: ./migrate.zip"
+    Write-Success "数据文件已保存到: ./migrate.tar"
 
     Write-Host
     Write-ColorOutput "[成功] v1数据导出完成!" "Green"
-    Write-Info "导出文件: ./migrate.zip"
-    Write-Warning "下一步: 请将migrate.zip和迁移工具复制到v2容器中进行导入"
+    Write-Info "导出文件: ./migrate.tar"
+    Write-Warning "下一步: 请将migrate.tar和迁移工具复制到v2容器中进行导入"
     Write-Host
 }
 catch {

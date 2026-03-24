@@ -54,14 +54,14 @@ echo -e "${GREEN}[完成]${NC} 数据导出完成"
 
 # 复制数据到主机
 echo -e "${MAGENTA}[步骤3]${NC} 复制导出的数据到主机..."
-if ! docker cp "$V1_CONTAINER":/opt/maxkb/app/v1-to-v2-migrator/migrate.zip ./migrate.zip; then
+if ! docker cp "$V1_CONTAINER":/opt/maxkb/app/v1-to-v2-migrator/migrate.tar ./migrate.tar; then
     echo -e "${RED}[错误]${NC} 复制数据文件失败"
     exit 1
 fi
-echo -e "${GREEN}[完成]${NC} 数据文件已保存到: ./migrate.zip"
+echo -e "${GREEN}[完成]${NC} 数据文件已保存到: ./migrate.tar"
 
 echo
 echo -e "${GREEN}[成功]${NC} v1数据导出完成!"
-echo "[文件] 导出文件: ./migrate.zip"
-echo -e "${YELLOW}[提示]${NC} 下一步: 请将migrate.zip和迁移工具复制到v2容器中进行导入"
+echo "[文件] 导出文件: ./migrate.tar"
+echo -e "${YELLOW}[提示]${NC} 下一步: 请将migrate.tar和迁移工具复制到v2容器中进行导入"
 echo
