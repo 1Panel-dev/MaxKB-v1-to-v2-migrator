@@ -14,36 +14,6 @@ from rest_framework import serializers
 from commons.util import page, save_batch_file
 
 
-class KnowledgeModel(serializers.ModelSerializer):
-    class Meta:
-        model = DataSet
-        fields = "__all__"
-
-
-class DocumentModel(serializers.ModelSerializer):
-    class Meta:
-        model = Document
-        fields = "__all__"
-
-
-class ParagraphModel(serializers.ModelSerializer):
-    class Meta:
-        model = Paragraph
-        fields = "__all__"
-
-
-class ProblemModel(serializers.ModelSerializer):
-    class Meta:
-        model = Problem
-        fields = "__all__"
-
-
-class ProblemParagraphMappingModel(serializers.ModelSerializer):
-    class Meta:
-        model = ProblemParagraphMapping
-        fields = "__all__"
-
-
 class ImageModel(serializers.ModelSerializer):
     class Meta:
         model = Image
@@ -56,34 +26,94 @@ class FileModel(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class EmbeddingModel(serializers.ModelSerializer):
-    class Meta:
-        model = Embedding
-        fields = "__all__"
-
-
 def knowledge_export(knowledge_list, source_name, current_page):
-    batch_data = KnowledgeModel(list(knowledge_list), many=True).data
+    batch_data = [
+        {
+            'id': k.id,
+            'name': k.name,
+            'desc': k.desc,
+            'user': k.user_id,
+            'type': k.type,
+            'embedding_mode': k.embedding_mode_id,
+            'meta': k.meta,
+            'create_time': k.create_time,
+            'update_time': k.update_time,
+        }
+        for k in knowledge_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 
 def document_export(document_list, source_name, current_page):
-    batch_data = DocumentModel(list(document_list), many=True).data
+    batch_data = [
+        {
+            'id': d.id,
+            'dataset': d.dataset_id,
+            'name': d.name,
+            'char_length': d.char_length,
+            'status': d.status,
+            'status_meta': d.status_meta,
+            'is_active': d.is_active,
+            'type': d.type,
+            'hit_handling_method': d.hit_handling_method,
+            'directly_return_similarity': d.directly_return_similarity,
+            'meta': d.meta,
+            'create_time': d.create_time,
+            'update_time': d.update_time,
+        }
+        for d in document_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 
 def paragraph_export(paragraph_list, source_name, current_page):
-    batch_data = ParagraphModel(list(paragraph_list), many=True).data
+    batch_data = [
+        {
+            'id': p.id,
+            'document': p.document_id,
+            'dataset': p.dataset_id,
+            'content': p.content,
+            'title': p.title,
+            'status': p.status,
+            'status_meta': p.status_meta,
+            'hit_num': p.hit_num,
+            'is_active': p.is_active,
+            'create_time': p.create_time,
+            'update_time': p.update_time,
+        }
+        for p in paragraph_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 
 def problem_export(problem_list, source_name, current_page):
-    batch_data = ProblemModel(list(problem_list), many=True).data
+    batch_data = [
+        {
+            'id': prob.id,
+            'dataset': prob.dataset_id,
+            'content': prob.content,
+            'hit_num': prob.hit_num,
+            'create_time': prob.create_time,
+            'update_time': prob.update_time,
+        }
+        for prob in problem_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 
 def problem_paragraph_mapping_export(problem_paragraph_mapping_list, source_name, current_page):
-    batch_data = ProblemParagraphMappingModel(list(problem_paragraph_mapping_list), many=True).data
+    batch_data = [
+        {
+            'id': m.id,
+            'dataset': m.dataset_id,
+            'document': m.document_id,
+            'problem': m.problem_id,
+            'paragraph': m.paragraph_id,
+            'create_time': m.create_time,
+            'update_time': m.update_time,
+        }
+        for m in problem_paragraph_mapping_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 
@@ -110,7 +140,21 @@ def file_export(file_list, source_name, current_page):
 
 
 def embedding_export(embedding_list, source_name, current_page):
-    batch_data = EmbeddingModel(list(embedding_list), many=True).data
+    batch_data = [
+        {
+            'id': e.id,
+            'source_id': e.source_id,
+            'source_type': e.source_type,
+            'is_active': e.is_active,
+            'dataset': e.dataset_id,
+            'document': e.document_id,
+            'paragraph': e.paragraph_id,
+            'embedding': e.embedding,
+            'search_vector': e.search_vector,
+            'meta': e.meta,
+        }
+        for e in embedding_list
+    ]
     save_batch_file(batch_data, source_name, current_page)
 
 

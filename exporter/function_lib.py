@@ -9,20 +9,32 @@
 import os
 import shutil
 from django.db.models import QuerySet
-from rest_framework import serializers
 
 from function_lib.models.function import FunctionLib
 from commons.util import page, save_batch_file
 
 
-class FunctionLibModel(serializers.ModelSerializer):
-    class Meta:
-        model = FunctionLib
-        fields = "__all__"
-
-
 def function_lib_export(function_lib_list, source_name, current_page):
-    batch_list = FunctionLibModel(list(function_lib_list), many=True).data
+    batch_list = [
+        {
+            'id': fl.id,
+            'user': fl.user_id,
+            'name': fl.name,
+            'desc': fl.desc,
+            'code': fl.code,
+            'input_field_list': fl.input_field_list,
+            'init_field_list': fl.init_field_list,
+            'icon': fl.icon,
+            'is_active': fl.is_active,
+            'permission_type': fl.permission_type,
+            'function_type': fl.function_type,
+            'template_id': fl.template_id,
+            'init_params': fl.init_params,
+            'create_time': fl.create_time,
+            'update_time': fl.update_time,
+        }
+        for fl in function_lib_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 

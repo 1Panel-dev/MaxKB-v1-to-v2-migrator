@@ -9,96 +9,169 @@
 from application.models import Application, WorkFlowVersion, Chat, ChatRecord, ApplicationDatasetMapping
 from application.models.api_key_model import ApplicationApiKey, ApplicationAccessToken, ApplicationPublicAccessClient
 from django.db.models import QuerySet
-from rest_framework import serializers
 
 from commons.util import page, save_batch_file
 
 
-class ApplicationModel(serializers.ModelSerializer):
-    class Meta:
-        model = Application
-        fields = "__all__"
-
-
-class ApplicationVersionModel(serializers.ModelSerializer):
-    class Meta:
-        model = WorkFlowVersion
-        fields = "__all__"
-
-
-class ApplicationApiKeyModel(serializers.ModelSerializer):
-    class Meta:
-        model = ApplicationApiKey
-        fields = "__all__"
-
-
-class ApplicationAccessTokenModel(serializers.ModelSerializer):
-    class Meta:
-        model = ApplicationAccessToken
-        fields = "__all__"
-
-
-class ApplicationPublicAccessClientModel(serializers.ModelSerializer):
-    class Meta:
-        model = ApplicationPublicAccessClient
-        fields = "__all__"
-
-
-class ChatModel(serializers.ModelSerializer):
-    class Meta:
-        model = Chat
-        fields = "__all__"
-
-
-class ChatRecordModel(serializers.ModelSerializer):
-    class Meta:
-        model = ChatRecord
-        fields = "__all__"
-
-
-class ApplicationDatasetMappingModel(serializers.ModelSerializer):
-    class Meta:
-        model = ApplicationDatasetMapping
-        fields = "__all__"
-
-
 def application_export(application_list, source_name, current_page):
-    batch_list = ApplicationModel(list(application_list), many=True).data
+    batch_list = [
+        {
+            'id': a.id,
+            'name': a.name,
+            'desc': a.desc,
+            'prologue': a.prologue,
+            'dialogue_number': a.dialogue_number,
+            'user': a.user_id,
+            'model': a.model_id,
+            'dataset_setting': a.dataset_setting,
+            'model_setting': a.model_setting,
+            'model_params_setting': a.model_params_setting,
+            'tts_model_params_setting': a.tts_model_params_setting,
+            'problem_optimization': a.problem_optimization,
+            'icon': a.icon,
+            'work_flow': a.work_flow,
+            'type': a.type,
+            'problem_optimization_prompt': a.problem_optimization_prompt,
+            'tts_model': a.tts_model_id,
+            'stt_model_id': a.stt_model_id,
+            'tts_model_enable': a.tts_model_enable,
+            'stt_model_enable': a.stt_model_enable,
+            'tts_type': a.tts_type,
+            'tts_autoplay': a.tts_autoplay,
+            'stt_autosend': a.stt_autosend,
+            'clean_time': a.clean_time,
+            'file_upload_enable': a.file_upload_enable,
+            'file_upload_setting': a.file_upload_setting,
+            'create_time': a.create_time,
+            'update_time': a.update_time,
+        }
+        for a in application_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_workflow_version_export(workflow_version_list, source_name, current_page):
-    batch_list = ApplicationVersionModel(list(workflow_version_list), many=True).data
+    batch_list = [
+        {
+            'id': v.id,
+            'application': v.application_id,
+            'name': v.name,
+            'publish_user_id': v.publish_user_id,
+            'publish_user_name': v.publish_user_name,
+            'work_flow': v.work_flow,
+            'create_time': v.create_time,
+            'update_time': v.update_time,
+        }
+        for v in workflow_version_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_api_key_export(application_api_key_list, source_name, current_page):
-    batch_list = ApplicationApiKeyModel(list(application_api_key_list), many=True).data
+    batch_list = [
+        {
+            'id': k.id,
+            'secret_key': k.secret_key,
+            'user': k.user_id,
+            'application': k.application_id,
+            'is_active': k.is_active,
+            'allow_cross_domain': k.allow_cross_domain,
+            'cross_domain_list': k.cross_domain_list,
+            'create_time': k.create_time,
+            'update_time': k.update_time,
+        }
+        for k in application_api_key_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_access_token_export(application_access_token_list, source_name, current_page):
-    batch_list = ApplicationAccessTokenModel(list(application_access_token_list), many=True).data
+    batch_list = [
+        {
+            'application': t.application_id,
+            'access_token': t.access_token,
+            'is_active': t.is_active,
+            'access_num': t.access_num,
+            'white_active': t.white_active,
+            'white_list': t.white_list,
+            'show_source': t.show_source,
+            'language': t.language,
+            'create_time': t.create_time,
+            'update_time': t.update_time,
+        }
+        for t in application_access_token_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_public_access_client_export(application_public_access_client_list, source_name, current_page):
-    batch_list = ApplicationPublicAccessClientModel(list(application_public_access_client_list), many=True).data
+    batch_list = [
+        {
+            'id': c.id,
+            'client_id': c.client_id,
+            'application': c.application_id,
+            'access_num': c.access_num,
+            'intraday_access_num': c.intraday_access_num,
+            'create_time': c.create_time,
+            'update_time': c.update_time,
+        }
+        for c in application_public_access_client_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def chat_export(chat_list, source_name, current_page):
-    batch_list = ChatModel(list(chat_list), many=True).data
+    batch_list = [
+        {
+            'id': c.id,
+            'application': c.application_id,
+            'abstract': c.abstract,
+            'asker': c.asker,
+            'client_id': c.client_id,
+            'is_deleted': c.is_deleted,
+            'create_time': c.create_time,
+            'update_time': c.update_time,
+        }
+        for c in chat_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def chat_record_export(chat_record_list, source_name, current_page):
-    batch_list = ChatRecordModel(list(chat_record_list), many=True).data
+    batch_list = [
+        {
+            'id': r.id,
+            'chat': r.chat_id,
+            'vote_status': r.vote_status,
+            'problem_text': r.problem_text,
+            'answer_text': r.answer_text,
+            'answer_text_list': r.answer_text_list,
+            'message_tokens': r.message_tokens,
+            'answer_tokens': r.answer_tokens,
+            'const': r.const,
+            'details': r.details,
+            'improve_paragraph_id_list': r.improve_paragraph_id_list,
+            'run_time': r.run_time,
+            'index': r.index,
+            'create_time': r.create_time,
+            'update_time': r.update_time,
+        }
+        for r in chat_record_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_dataset_mapping_export(application_dataset_mapping_list, source_name, current_page):
-    batch_list = ApplicationDatasetMappingModel(list(application_dataset_mapping_list), many=True).data
+    batch_list = [
+        {
+            'id': m.id,
+            'application': m.application_id,
+            'dataset': m.dataset_id,
+            'create_time': m.create_time,
+            'update_time': m.update_time,
+        }
+        for m in application_dataset_mapping_list
+    ]
     save_batch_file(batch_list, source_name, current_page)
 
 

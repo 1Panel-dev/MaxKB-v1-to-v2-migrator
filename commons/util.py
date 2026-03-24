@@ -147,7 +147,7 @@ def save_batch_file(data_list, source_name, current_page):
     os.makedirs(dir_path, exist_ok=True)
     with open(base_path, 'wb') as f:
         # 使用pickle的dump方法将对象序列化并写入文件
-        pickle.dump(data_list, f)
+        pickle.dump(data_list, f, protocol=pickle.HIGHEST_PROTOCOL)
     os.replace(base_path, ready_name)
 
 
