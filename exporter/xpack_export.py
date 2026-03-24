@@ -58,37 +58,37 @@ class SystemParamsModel(serializers.ModelSerializer):
 
 
 def application_setting_export(application_setting_list, source_name, current_page):
-    batch_list = [ApplicationSettingModel(application_setting).data for application_setting in application_setting_list]
+    batch_list = ApplicationSettingModel(list(application_setting_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def platform_export(platform_list, source_name, current_page):
-    batch_list = [PlatformModel(platform).data for platform in platform_list]
+    batch_list = PlatformModel(list(platform_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def platform_user_export(platform_user_list, source_name, current_page):
-    batch_list = [PlatformUserModel(platform_user).data for platform_user in platform_user_list]
+    batch_list = PlatformUserModel(list(platform_user_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def platform_source_export(platform_source_list, source_name, current_page):
-    batch_list = [PlatformSourceModel(platform_source).data for platform_source in platform_source_list]
+    batch_list = PlatformSourceModel(list(platform_source_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def system_api_key_export(system_api_key_list, source_name, current_page):
-    batch_list = [SystemApiKeyModel(system_api_key).data for system_api_key in system_api_key_list]
+    batch_list = SystemApiKeyModel(list(system_api_key_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def auth_config_export(auth_config_list, source_name, current_page):
-    batch_list = [AuthConfigModel(auth_config).data for auth_config in auth_config_list]
+    batch_list = AuthConfigModel(list(auth_config_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def system_params_export(system_params_list, source_name, current_page):
-    batch_list = [SystemParamsModel(system_params).data for system_params in system_params_list]
+    batch_list = SystemParamsModel(list(system_params_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 

@@ -103,17 +103,17 @@ def application_dataset_mapping_export(application_dataset_mapping_list, source_
 
 
 def export():
-    page(QuerySet(Application), 50, application_export, "application", "导出应用")
-    page(QuerySet(WorkFlowVersion), 50, application_workflow_version_export, "application_version",
+    page(QuerySet(Application), 100, application_export, "application", "导出应用")
+    page(QuerySet(WorkFlowVersion), 100, application_workflow_version_export, "application_version",
          "导出应用工作流历史版本")
-    page(QuerySet(ApplicationApiKey), 50, application_api_key_export, "application_api_key", "导出应用Apikey")
-    page(QuerySet(ApplicationAccessToken), 50, application_access_token_export, "application_access_token",
+    page(QuerySet(ApplicationApiKey), 100, application_api_key_export, "application_api_key", "导出应用Apikey")
+    page(QuerySet(ApplicationAccessToken), 100, application_access_token_export, "application_access_token",
          "导出应用访问限制配置",
          primary_key="application_id")
-    page(QuerySet(ApplicationPublicAccessClient), 50, application_public_access_client_export,
+    page(QuerySet(ApplicationPublicAccessClient), 100, application_public_access_client_export,
          "application_public_access_client",
          "导出应用客户端信息")
     page(QuerySet(Chat), 500, chat_export, "chat", "导出对话日志")
     page(QuerySet(ChatRecord), 1000, chat_record_export, "chat_record", "导出对话日志记录")
-    page(QuerySet(ApplicationDatasetMapping), 50, application_dataset_mapping_export, "application_dataset_mapping",
+    page(QuerySet(ApplicationDatasetMapping), 100, application_dataset_mapping_export, "application_dataset_mapping",
          "导出应用与知识库的关联关系")

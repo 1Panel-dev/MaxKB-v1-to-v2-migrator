@@ -51,7 +51,7 @@ class UserModel(serializers.ModelSerializer):
 
 
 def log_export(log_list, source_name, current_page):
-    batch_list = [LogModel(log).data for log in log_list]
+    batch_list = LogModel(list(log_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
@@ -75,7 +75,7 @@ def model_export(model_list, source_name, current_page):
 
 
 def system_setting_export(system_setting_list, source_name, current_page):
-    batch_list = [SystemSettingModel(system_setting).data for system_setting in system_setting_list]
+    batch_list = SystemSettingModel(list(system_setting_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
