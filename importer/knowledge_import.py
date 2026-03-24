@@ -1,13 +1,22 @@
 import pickle
 import re
-import uuid
 from collections import defaultdict
 
 from django.db import models
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Case, When, Value
 from knowledge.models import KnowledgeFolder, Knowledge, KnowledgeType, KnowledgeScope, Document, Paragraph, \
     ProblemParagraphMapping, Problem, Embedding, File, FileSourceType
 from system_manage.models import WorkspaceUserResourcePermission
+
+# 预编译正则，避免每次调用时重新编译
+_FILE_PATTERN = re.compile(
+    r'/api/file/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
+    re.IGNORECASE
+)
+_IMAGE_PATTERN = re.compile(
+    r'/api/image/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
+    re.IGNORECASE
+)
 
 from application.models import ApplicationKnowledgeMapping
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
@@ -113,33 +122,17 @@ def problem_import(file_list, source_name, current_page):
 
 
 def extract_file_and_image_ids(content):
-    # UUID 格式的正则表达式：8-4-4-4-12 个十六进制字符
-    uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-
-    # 提取 /api/file/ 后面的有效 UUID
-    file_matches = re.findall(rf'/api/file/({uuid_pattern})', content, re.IGNORECASE)
-
-    # 提取 /api/image/ 后面的有效 UUID
-    image_matches = re.findall(rf'/api/image/({uuid_pattern})', content, re.IGNORECASE)
-
-    # 验证提取的 UUID 是否有效
-    valid_file_ids = []
-    for match in file_matches:
-        try:
-            uuid.UUID(match)  # 验证 UUID 格式
-            valid_file_ids.append(match)
-        except ValueError:
-            print(f"警告: 无效的文件 UUID: {match}")
-
-    valid_image_ids = []
-    for match in image_matches:
-        try:
-            uuid.UUID(match)  # 验证 UUID 格式
-            valid_image_ids.append(match)
-        except ValueError:
-            print(f"警告: 无效的图片 UUID: {match}")
-
-    return valid_file_ids, valid_image_ids
+    """从段落内容中提取文件和图片 ID。
+    正则本身已保证 UUID 格式，无需二次校验。
+    先做字符串预判，避免无引用段落的正则开销。
+    """
+    has_file = '/api/file/' in content
+    has_image = '/api/image/' in content
+    if not has_file and not has_image:
+        return [], []
+    file_ids = _FILE_PATTERN.findall(content) if has_file else []
+    image_ids = _IMAGE_PATTERN.findall(content) if has_image else []
+    return file_ids, image_ids
 
 
 def paragraph_import(file_list, source_name, current_page):
@@ -202,10 +195,16 @@ def paragraph_import(file_list, source_name, current_page):
                 )
                 paragraph_model_list.append(paragraph)
 
-        # 批量更新File表（按文档分组，避免N+1更新）
-        for doc_id, ids in doc_file_ids.items():
-            QuerySet(File).filter(id__in=ids).update(
-                source_id=doc_id,
+        # 单条 SQL 批量更新 File 表（CASE WHEN，替代每 doc 一次 UPDATE）
+        if doc_file_ids:
+            all_file_ids = [fid for ids in doc_file_ids.values() for fid in ids]
+            when_clauses = [
+                When(id=fid, then=Value(str(doc_id)))
+                for doc_id, ids in doc_file_ids.items()
+                for fid in ids
+            ]
+            QuerySet(File).filter(id__in=all_file_ids).update(
+                source_id=Case(*when_clauses, output_field=models.CharField()),
                 source_type=FileSourceType.DOCUMENT
             )
         QuerySet(Paragraph).bulk_create(paragraph_model_list)
