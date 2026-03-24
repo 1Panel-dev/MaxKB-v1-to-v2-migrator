@@ -6,11 +6,11 @@
     @date：2025/7/28 14:33
     @desc:
 """
+from application.models import Application, WorkFlowVersion, Chat, ChatRecord, ApplicationDatasetMapping
+from application.models.api_key_model import ApplicationApiKey, ApplicationAccessToken, ApplicationPublicAccessClient
 from django.db.models import QuerySet
 from rest_framework import serializers
 
-from application.models import Application, WorkFlowVersion, Chat, ChatRecord, ApplicationDatasetMapping
-from application.models.api_key_model import ApplicationApiKey, ApplicationAccessToken, ApplicationPublicAccessClient
 from commons.util import page, save_batch_file
 
 
@@ -63,46 +63,42 @@ class ApplicationDatasetMappingModel(serializers.ModelSerializer):
 
 
 def application_export(application_list, source_name, current_page):
-    batch_list = [ApplicationModel(application).data for application in application_list]
+    batch_list = ApplicationModel(list(application_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_workflow_version_export(workflow_version_list, source_name, current_page):
-    batch_list = [ApplicationVersionModel(version).data for version in workflow_version_list]
+    batch_list = ApplicationVersionModel(list(workflow_version_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_api_key_export(application_api_key_list, source_name, current_page):
-    batch_list = [ApplicationApiKeyModel(application_api_key).data for application_api_key in application_api_key_list]
+    batch_list = ApplicationApiKeyModel(list(application_api_key_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_access_token_export(application_access_token_list, source_name, current_page):
-    batch_list = [ApplicationAccessTokenModel(application_access_token).data for application_access_token in
-                  application_access_token_list]
+    batch_list = ApplicationAccessTokenModel(list(application_access_token_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_public_access_client_export(application_public_access_client_list, source_name, current_page):
-    batch_list = [ApplicationPublicAccessClientModel(application_public_access_client).data for
-                  application_public_access_client in
-                  application_public_access_client_list]
+    batch_list = ApplicationPublicAccessClientModel(list(application_public_access_client_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def chat_export(chat_list, source_name, current_page):
-    batch_list = [ChatModel(chat).data for chat in chat_list]
+    batch_list = ChatModel(list(chat_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def chat_record_export(chat_record_list, source_name, current_page):
-    batch_list = [ChatRecordModel(chat_record).data for chat_record in chat_record_list]
+    batch_list = ChatRecordModel(list(chat_record_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
 def application_dataset_mapping_export(application_dataset_mapping_list, source_name, current_page):
-    batch_list = [ApplicationDatasetMappingModel(application_dataset_mapping).data for application_dataset_mapping in
-                  application_dataset_mapping_list]
+    batch_list = ApplicationDatasetMappingModel(list(application_dataset_mapping_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
@@ -117,7 +113,7 @@ def export():
     page(QuerySet(ApplicationPublicAccessClient), 50, application_public_access_client_export,
          "application_public_access_client",
          "导出应用客户端信息")
-    page(QuerySet(Chat), 50, chat_export, "chat", "导出对话日志")
-    page(QuerySet(ChatRecord), 50, chat_record_export, "chat_record", "导出对话日志记录")
+    page(QuerySet(Chat), 500, chat_export, "chat", "导出对话日志")
+    page(QuerySet(ChatRecord), 1000, chat_record_export, "chat_record", "导出对话日志记录")
     page(QuerySet(ApplicationDatasetMapping), 50, application_dataset_mapping_export, "application_dataset_mapping",
          "导出应用与知识库的关联关系")

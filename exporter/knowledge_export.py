@@ -6,11 +6,11 @@
     @date：2025/7/29 14:45
     @desc:
 """
+from dataset.models import DataSet, Document, Paragraph, Problem, ProblemParagraphMapping, Image, File
 from django.db.models import QuerySet
+from embedding.models import Embedding
 from rest_framework import serializers
 
-from dataset.models import DataSet, Document, Paragraph, Problem, ProblemParagraphMapping, Image, File
-from embedding.models import Embedding
 from commons.util import page, save_batch_file
 
 
@@ -63,28 +63,27 @@ class EmbeddingModel(serializers.ModelSerializer):
 
 
 def knowledge_export(knowledge_list, source_name, current_page):
-    batch_data = [KnowledgeModel(knowledge).data for knowledge in knowledge_list]
+    batch_data = KnowledgeModel(list(knowledge_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 
 def document_export(document_list, source_name, current_page):
-    batch_data = [DocumentModel(document).data for document in document_list]
+    batch_data = DocumentModel(list(document_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 
 def paragraph_export(paragraph_list, source_name, current_page):
-    batch_data = [ParagraphModel(paragraph).data for paragraph in paragraph_list]
+    batch_data = ParagraphModel(list(paragraph_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 
 def problem_export(problem_list, source_name, current_page):
-    batch_data = [ProblemModel(problem).data for problem in problem_list]
+    batch_data = ProblemModel(list(problem_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 
 def problem_paragraph_mapping_export(problem_paragraph_mapping_list, source_name, current_page):
-    batch_data = [ProblemParagraphMappingModel(problem_paragraph_mapping).data for problem_paragraph_mapping in
-                  problem_paragraph_mapping_list]
+    batch_data = ProblemParagraphMappingModel(list(problem_paragraph_mapping_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 
@@ -111,7 +110,7 @@ def file_export(file_list, source_name, current_page):
 
 
 def embedding_export(embedding_list, source_name, current_page):
-    batch_data = [EmbeddingModel(embedding).data for embedding in embedding_list]
+    batch_data = EmbeddingModel(list(embedding_list), many=True).data
     save_batch_file(batch_data, source_name, current_page)
 
 

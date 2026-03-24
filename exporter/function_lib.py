@@ -22,7 +22,7 @@ class FunctionLibModel(serializers.ModelSerializer):
 
 
 def function_lib_export(function_lib_list, source_name, current_page):
-    batch_list = [FunctionLibModel(function_lib).data for function_lib in function_lib_list]
+    batch_list = FunctionLibModel(list(function_lib_list), many=True).data
     save_batch_file(batch_list, source_name, current_page)
 
 
