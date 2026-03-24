@@ -9,21 +9,8 @@
 from dataset.models import DataSet, Document, Paragraph, Problem, ProblemParagraphMapping, Image, File
 from django.db.models import QuerySet
 from embedding.models import Embedding
-from rest_framework import serializers
 
 from commons.util import page, save_batch_file
-
-
-class ImageModel(serializers.ModelSerializer):
-    class Meta:
-        model = Image
-        fields = "__all__"
-
-
-class FileModel(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = "__all__"
 
 
 def knowledge_export(knowledge_list, source_name, current_page):
@@ -121,9 +108,14 @@ def image_export(image_list, source_name, current_page):
     batch_data = []
     for image in image_list:
         try:
-            image_data = {**ImageModel(image).data, 'image_data': image.image}
-            batch_data.append(image_data)
-        except Exception as e:
+            batch_data.append({
+                'id': image.id,
+                'image_name': image.image_name,
+                'image_data': image.image,
+                'create_time': image.create_time,
+                'update_time': image.update_time,
+            })
+        except Exception:
             pass
     save_batch_file(batch_data, source_name, current_page)
 
@@ -132,9 +124,16 @@ def file_export(file_list, source_name, current_page):
     batch_data = []
     for file in file_list:
         try:
-            file_data = {**FileModel(file).data, 'content': file.get_byte()}
-            batch_data.append(file_data)
-        except Exception as e:
+            batch_data.append({
+                'id': file.id,
+                'file_name': file.file_name,
+                'loid': file.loid,
+                'meta': file.meta,
+                'content': file.get_byte(),
+                'create_time': file.create_time,
+                'update_time': file.update_time,
+            })
+        except Exception:
             pass
     save_batch_file(batch_data, source_name, current_page)
 
