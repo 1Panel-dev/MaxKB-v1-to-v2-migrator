@@ -8,11 +8,18 @@
 """
 import os
 import sys
+import time
 import django
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartdoc.settings')
 django.setup()
+
+
+def _timed(label, fn):
+    t0 = time.time()
+    fn()
+    print(f"[{label}] 耗时: {time.time() - t0:.1f}s")
 
 
 def export():
@@ -30,10 +37,12 @@ def export():
         print(f"当前版本 {version} 不是 v1.10.10-lts 及以上版本，不能导出数据！")
         sys.exit(1)
 
-    _export()
-    knowledge_export()
-    function_export()
-    setting_export()
+    export_start = time.time()
+
+    _timed("导出应用", _export)
+    _timed("导出知识库", knowledge_export)
+    _timed("导出函数库", function_export)
+    _timed("导出系统设置", setting_export)
 
     if contains_xpack():
         from xpack.serializers.license_serializers import LicenseSerializers
@@ -41,8 +50,11 @@ def export():
         LicenseSerializers().refresh()
         if xpack_cache.set('XPACK_LICENSE_IS_VALID', False, None):
             from .xpack_export import export as xpack_export
-            xpack_export()
+            _timed("导出 xpack", xpack_export)
 
-    print("\n\n正在打包迁移数据...")
+    print(f"\n导出总耗时: {time.time() - export_start:.1f}s")
+
+    print("\n正在打包迁移数据...")
+    t0 = time.time()
     zip_folder()
-    print("迁移数据打包完成")
+    print(f"迁移数据打包完成，耗时: {time.time() - t0:.1f}s")
