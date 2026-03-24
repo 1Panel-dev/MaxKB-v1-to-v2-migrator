@@ -132,7 +132,7 @@ def application_import(file_list, source_name, current_page):
                                    app.type == 'SIMPLE']
         # 删除数据
         QuerySet(ApplicationVersion).filter(
-            id__in=[simple_app_version.id for simple_app_version in simple_app_version_list])
+            id__in=[simple_app_version.id for simple_app_version in simple_app_version_list]).delete()
         # 插入简易版本发布信息
         QuerySet(ApplicationVersion).bulk_create(simple_app_version_list)
 

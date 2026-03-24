@@ -1,6 +1,7 @@
 import pickle
 import re
 import uuid
+from collections import defaultdict
 
 from django.db import models
 from django.db.models import QuerySet
@@ -147,7 +148,6 @@ def paragraph_import(file_list, source_name, current_page):
 
         QuerySet(Paragraph).filter(id__in=[p.get('id') for p in paragraph_list]).delete()
         # 按 document_id 分组并为每组分配递增的 position
-        from collections import defaultdict
         document_paragraphs = defaultdict(list)
 
         for item in paragraph_list:
@@ -171,18 +171,16 @@ def paragraph_import(file_list, source_name, current_page):
                 existing_positions[doc_id] = max_pos or 0
 
         paragraph_model_list = []
+        doc_file_ids = {}  # doc_id -> [file_ids]，用于批量更新File表
         for document_id, paragraphs in document_paragraphs.items():
             start_position = existing_positions[document_id]
 
             for i, item in enumerate(paragraphs):
                 content = item.get('content')
                 file_ids, image_ids = extract_file_and_image_ids(content)
-                # 更新File表
-                for file_id in file_ids + image_ids:
-                    QuerySet(File).filter(id=file_id).update(
-                        source_id=item.get('document'),
-                        source_type=FileSourceType.DOCUMENT
-                    )
+                all_ids = file_ids + image_ids
+                if all_ids:
+                    doc_file_ids.setdefault(item.get('document'), []).extend(all_ids)
 
                 content = (
                     content
@@ -204,6 +202,12 @@ def paragraph_import(file_list, source_name, current_page):
                 )
                 paragraph_model_list.append(paragraph)
 
+        # 批量更新File表（按文档分组，避免N+1更新）
+        for doc_id, ids in doc_file_ids.items():
+            QuerySet(File).filter(id__in=ids).update(
+                source_id=doc_id,
+                source_type=FileSourceType.DOCUMENT
+            )
         QuerySet(Paragraph).bulk_create(paragraph_model_list)
         rename(file)
 

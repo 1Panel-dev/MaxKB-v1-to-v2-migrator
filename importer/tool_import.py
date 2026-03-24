@@ -1,6 +1,6 @@
+import itertools
 import os
 import pickle
-from functools import reduce
 import shutil
 import zipfile
 
@@ -65,6 +65,7 @@ def to_v2_tool(instance):
 
 
 def tool_import(file_list, source_name, current_page):
+    user_model_list = list(QuerySet(User).all())
     for file in file_list:
         tool_list = pickle.loads(file.read_bytes())
         tool_model_list = [to_v2_tool(item) for item in tool_list if item.get('function_type') == 'PUBLIC']
@@ -73,21 +74,17 @@ def tool_import(file_list, source_name, current_page):
         # 删除授权相关数据
         QuerySet(WorkspaceUserResourcePermission).filter(
             target__in=[tool.get('id') for tool in tool_list]).delete()
-        # 获取所有用户数据
-        user_model_list = QuerySet(User).all()
         # 构建工具权限列表
-        tool_permission_list = reduce(lambda x, y: [*x, *y], [
+        tool_permission_list = list(itertools.chain.from_iterable(
             [
                 to_workspace_user_resource_permission(user_model.id, 'TOOL', tool.get('id'),
                                                       permission_list=(['MANAGE', 'VIEW'] if
                                                                        str(user_model.id) == str(tool.get('user')) else [
-                                                          'VIEW'])) for user_model
-                in
-                user_model_list]
+                                                          'VIEW'])) for user_model in user_model_list]
             if tool.get('permission_type') == 'PUBLIC' else [
                 to_workspace_user_resource_permission(tool.get('user'), 'TOOL', tool.get('id'))]
-            for
-            tool in tool_list if tool.get('function_type') == 'PUBLIC'], [])
+            for tool in tool_list if tool.get('function_type') == 'PUBLIC'
+        ))
         # 插入授权数据
         QuerySet(WorkspaceUserResourcePermission).bulk_create(tool_permission_list)
         rename(file)

@@ -6,9 +6,11 @@
     @date：2025/8/12 10:26
     @desc:
 """
+import itertools
 import json
+import os
 import pickle
-from functools import reduce
+import shutil
 
 from django.db.models import QuerySet
 
@@ -93,10 +95,6 @@ def update_qwen_model(model):
     return model
 
 
-import os
-import zipfile
-import shutil
-
 
 def local_model_import(model_name, model_type):
     if os.path.isabs(model_name):
@@ -153,6 +151,7 @@ def to_v2_model(model):
 
 
 def model_import(file_list, source_name, current_page):
+    user_model_list = list(QuerySet(User).all())
     for file in file_list:
         model_list = pickle.loads(file.read_bytes())
         model_model_list = [to_v2_model(model) for model in model_list]
@@ -164,10 +163,8 @@ def model_import(file_list, source_name, current_page):
         # 删除授权相关数据
         QuerySet(WorkspaceUserResourcePermission).filter(
             target__in=[model.get('id') for model in model_list]).delete()
-        # 获取所有用户数据
-        user_model_list = QuerySet(User).all()
         # 构建工具权限列表
-        model_permission_list = reduce(lambda x, y: [*x, *y], [
+        model_permission_list = list(itertools.chain.from_iterable(
             [
                 to_workspace_user_resource_permission(user.id, 'MODEL', model.get('id'),
                                                       permission_list=(['MANAGE', 'VIEW'] if
@@ -176,8 +173,8 @@ def model_import(file_list, source_name, current_page):
                 user_model_list]
             if model.get('permission_type') == 'PUBLIC' else [
                 to_workspace_user_resource_permission(model.get('user'), 'MODEL', model.get('id'))]
-            for
-            model in model_list], [])
+            for model in model_list
+        ))
         # 插入授权数据
         QuerySet(WorkspaceUserResourcePermission).bulk_create(model_permission_list)
         # 修改标识
@@ -233,6 +230,9 @@ def team_member_permission_import(file_list, source_name, current_page):
 
 
 def import_():
+    global nick_name_count, model_name_count_global
+    nick_name_count = {}
+    model_name_count_global = {}
     import_page(ImportQuerySet('system_setting'), 1, system_setting_import, "system_setting", "导入系统设置",
                 check=import_check)
     import_page(ImportQuerySet('user'), 1, user_import, "user", "导入用户", check=import_check)

@@ -59,10 +59,6 @@ def app_import():
     un_zip()
     print("迁移数据解压完成")
 
-    # 创建导入完成标记文件
-    with open(import_flag_file, 'w') as f:
-        f.write(f"Import completed at {os.environ.get('MAXKB_VERSION', '')}")
-
     file_import()
     setting_import()
     application_import()
@@ -71,4 +67,8 @@ def app_import():
     if contains_xpack():
         from .xpack_import import import_ as xpack_import
         xpack_import()
+
+    # 所有数据导入完成后再创建标记文件，防止中途崩溃导致的标记误写
+    with open(import_flag_file, 'w') as f:
+        f.write(f"Import completed at {os.environ.get('MAXKB_VERSION', '')}")
     cache.clear()
