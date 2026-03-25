@@ -63,7 +63,7 @@ echo -e "${MAGENTA}[步骤1]${NC} 复制迁移数据文件到v2容器..."
 step_start
 if [ -n "$v2_data" ]; then
     echo "[信息] 通过容器文件系统路径复制: $migrate_dir"
-    if ! { mkdir -p "$migrate_dir" && tar --exclude='*.tar' -cf - . | tar -xf - -C "$migrate_dir" && mv ./migrate.tar "$migrate_dir/migrate.tar"; }; then
+    if ! { mkdir -p "$migrate_dir" && tar --exclude='*.tar' -cf - . | tar -xf - -C "$migrate_dir" && cp ./migrate.tar "$migrate_dir/migrate.tar"; }; then
         echo -e "${RED}[错误]${NC} 复制迁移数据文件失败"
         exit 1
     fi
