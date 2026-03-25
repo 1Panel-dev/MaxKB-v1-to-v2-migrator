@@ -76,7 +76,7 @@ migrate_tar="${v1_data}/opt/maxkb/app/v1-to-v2-migrator/migrate.tar"
 
 if [ -f "$migrate_tar" ]; then
     echo "[信息] 通过容器文件系统路径复制: $migrate_tar"
-    if ! cp "$migrate_tar" ./migrate.tar; then
+    if ! mv "$migrate_tar" ./migrate.tar; then
         echo -e "${RED}[错误]${NC} 复制数据文件失败"
         exit 1
     fi
