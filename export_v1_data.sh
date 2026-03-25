@@ -54,9 +54,21 @@ echo -e "${GREEN}[完成]${NC} 数据导出完成"
 
 # 复制数据到主机
 echo -e "${MAGENTA}[步骤3]${NC} 复制导出的数据到主机..."
-if ! docker cp "$V1_CONTAINER":/opt/maxkb/app/v1-to-v2-migrator/migrate.tar ./migrate.tar; then
-    echo -e "${RED}[错误]${NC} 复制数据文件失败"
-    exit 1
+v1_data=$(docker inspect "$V1_CONTAINER" --format '{{.GraphDriver.Data.UpperDir}}')
+migrate_tar="${v1_data}/opt/maxkb/app/v1-to-v2-migrator/migrate.tar"
+
+if [ -f "$migrate_tar" ]; then
+    echo "[信息] 通过容器文件系统路径复制: $migrate_tar"
+    if ! cp "$migrate_tar" ./migrate.tar; then
+        echo -e "${RED}[错误]${NC} 复制数据文件失败"
+        exit 1
+    fi
+else
+    echo "[信息] 通过 docker cp 复制..."
+    if ! docker cp "$V1_CONTAINER":/opt/maxkb/app/v1-to-v2-migrator/migrate.tar ./migrate.tar; then
+        echo -e "${RED}[错误]${NC} 复制数据文件失败"
+        exit 1
+    fi
 fi
 echo -e "${GREEN}[完成]${NC} 数据文件已保存到: ./migrate.tar"
 
