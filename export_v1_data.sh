@@ -15,6 +15,18 @@ NC='\033[0m' # No Color
 echo "=== MaxKB v1 数据导出脚本 ==="
 echo
 
+# 计时工具函数
+_step_start=0
+step_start() {
+    _step_start=$(date +%s)
+}
+step_end() {
+    local elapsed=$(( $(date +%s) - _step_start ))
+    echo -e "${CYAN}[耗时]${NC} ${elapsed} 秒"
+}
+
+SCRIPT_START=$(date +%s)
+
 # 检查是否提供了容器名称参数
 if [ -z "$1" ]; then
     echo -e "${RED}[错误]${NC} 未提供容器名称"
@@ -38,22 +50,27 @@ fi
 
 # 复制迁移工具到v1容器
 echo -e "${MAGENTA}[步骤1]${NC} 复制迁移工具到v1容器..."
+step_start
 if ! docker cp . "$V1_CONTAINER":/opt/maxkb/app/v1-to-v2-migrator; then
     echo -e "${RED}[错误]${NC} 复制迁移工具失败"
     exit 1
 fi
+step_end
 echo -e "${GREEN}[完成]${NC} 迁移工具复制完成"
 
 # 在v1容器中导出数据
 echo -e "${MAGENTA}[步骤2]${NC} 在v1容器中导出数据..."
+step_start
 if ! docker exec -w /opt/maxkb/app/v1-to-v2-migrator "$V1_CONTAINER" python migrate.py export; then
     echo -e "${RED}[错误]${NC} 数据导出失败"
     exit 1
 fi
+step_end
 echo -e "${GREEN}[完成]${NC} 数据导出完成"
 
 # 复制数据到主机
 echo -e "${MAGENTA}[步骤3]${NC} 复制导出的数据到主机..."
+step_start
 v1_data=$(docker inspect "$V1_CONTAINER" --format '{{.GraphDriver.Data.UpperDir}}')
 migrate_tar="${v1_data}/opt/maxkb/app/v1-to-v2-migrator/migrate.tar"
 
@@ -70,10 +87,12 @@ else
         exit 1
     fi
 fi
+step_end
 echo -e "${GREEN}[完成]${NC} 数据文件已保存到: ./migrate.tar"
 
 echo
-echo -e "${GREEN}[成功]${NC} v1数据导出完成!"
+TOTAL_ELAPSED=$(( $(date +%s) - SCRIPT_START ))
+echo -e "${GREEN}[成功]${NC} v1数据导出完成! 总耗时: ${TOTAL_ELAPSED} 秒"
 echo "[文件] 导出文件: ./migrate.tar"
 echo -e "${YELLOW}[提示]${NC} 下一步: 请将migrate.tar和迁移工具复制到v2容器中进行导入"
 echo
