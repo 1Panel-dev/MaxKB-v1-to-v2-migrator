@@ -56,14 +56,18 @@ if [ ! -f "./migrate.tar" ]; then
 fi
 
 v2_data=$(docker inspect "$V2_CONTAINER" --format '{{.GraphDriver.Data.UpperDir}}')
-migrate_tar="${v2_data}/opt/maxkb-app/v1-to-v2-migrator/migrate.tar"
+migrate_dir="${v2_data}/opt/maxkb-app/v1-to-v2-migrator"
 
 # 复制迁移数据文件到v2容器
 echo -e "${MAGENTA}[步骤1]${NC} 复制迁移数据文件到v2容器..."
 step_start
-if [ -n "$v2_data" ] && [ -d "${v2_data}/opt/maxkb-app/v1-to-v2-migrator" ]; then
-    echo "[信息] 通过容器文件系统路径复制: $migrate_tar"
-    if ! mv ./migrate.tar "$migrate_tar"; then
+if [ -n "$v2_data" ]; then
+    echo "[信息] 通过容器文件系统路径复制: $migrate_dir"
+    if ! mkdir -p "$migrate_dir" && find . -type f ! -name 'migrate.tar' -exec cp --parents {} "$migrate_dir" \;; then
+        echo -e "${RED}[错误]${NC} 复制迁移数据文件失败"
+        exit 1
+    fi
+    if ! mv ./migrate.tar "$migrate_dir"; then
         echo -e "${RED}[错误]${NC} 复制迁移数据文件失败"
         exit 1
     fi
