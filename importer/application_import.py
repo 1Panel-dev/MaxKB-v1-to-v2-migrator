@@ -384,7 +384,7 @@ def application_chat_record_import(file_list, source_name, current_page):
         chat_record_model_list = [to_v2_chat_record(chat_record) for chat_record in chat_record_list]
         QuerySet(ChatRecord).filter(
             id__in=[chat_record_model.id for chat_record_model in chat_record_model_list]).delete()
-        QuerySet(ChatRecord).bulk_create(chat_record_model_list)
+        QuerySet(ChatRecord).bulk_create(chat_record_model_list, batch_size=20)
         rename(file)
 
 

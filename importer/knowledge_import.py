@@ -208,7 +208,7 @@ def paragraph_import(file_list, source_name, current_page):
                 source_id=Case(*when_clauses, output_field=models.CharField()),
                 source_type=FileSourceType.DOCUMENT
             )
-        QuerySet(Paragraph).bulk_create(paragraph_model_list)
+        QuerySet(Paragraph).bulk_create(paragraph_model_list, batch_size=50)
         rename(file)
 
 
@@ -248,7 +248,7 @@ def embedding_import(file_list, source_name, current_page):
     for file in file_list:
         mapping_list = pickle.loads(file.read_bytes())
         embedding_model_list = [to_v2_embedding(item) for item in mapping_list]
-        QuerySet(Embedding).bulk_create(embedding_model_list)
+        QuerySet(Embedding).bulk_create(embedding_model_list, batch_size=20)
         knowledge_ids = {item.get('dataset') for item in mapping_list if item.get('dataset')}
         for knowledge_id in knowledge_ids:
             _create_knowledge_vector_index(knowledge_id)
