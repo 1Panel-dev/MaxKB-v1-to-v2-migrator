@@ -86,6 +86,9 @@ def tool_import(file_list, source_name, current_page):
             for tool in tool_list if tool.get('function_type') == 'PUBLIC'
         ))
         # 插入授权数据
+        existing_user_ids = set(str(u) for u in QuerySet(User).filter(
+            id__in={str(p.user_id) for p in tool_permission_list}).values_list('id', flat=True))
+        tool_permission_list = [p for p in tool_permission_list if str(p.user_id) in existing_user_ids]
         QuerySet(WorkspaceUserResourcePermission).bulk_create(tool_permission_list)
         rename(file)
 

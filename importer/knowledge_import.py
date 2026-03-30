@@ -21,6 +21,7 @@ _IMAGE_PATTERN = re.compile(
 
 from application.models import ApplicationKnowledgeMapping
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission
+from users.models import User
 
 
 def to_v2_knowledge(knowledge):
@@ -102,6 +103,9 @@ def knowledge_import(file_list, source_name, current_page):
             to_workspace_user_resource_permission(knowledge_model.user_id, 'KNOWLEDGE', knowledge_model.id)
             for
             knowledge_model in knowledge_model_list]
+        existing_user_ids = set(str(u) for u in QuerySet(User).filter(
+            id__in={str(p.user_id) for p in knowledge_permission_list}).values_list('id', flat=True))
+        knowledge_permission_list = [p for p in knowledge_permission_list if str(p.user_id) in existing_user_ids]
         QuerySet(WorkspaceUserResourcePermission).bulk_create(knowledge_permission_list)
         rename(file)
 

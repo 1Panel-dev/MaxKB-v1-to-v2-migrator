@@ -21,6 +21,7 @@ from system_manage.models import WorkspaceUserResourcePermission
 
 from commons.util import import_page, ImportQuerySet, import_check, rename, to_workspace_user_resource_permission, \
     preserve_time_fields
+from users.models import User
 
 
 def to_v2_node(node):
@@ -147,6 +148,9 @@ def application_import(file_list, source_name, current_page):
         application_permission_list = [
             to_workspace_user_resource_permission(application_model.user_id, 'APPLICATION', application_model.id) for
             application_model in application_model_list]
+        existing_user_ids = set(str(u) for u in QuerySet(User).filter(
+            id__in={str(p.user_id) for p in application_permission_list}).values_list('id', flat=True))
+        application_permission_list = [p for p in application_permission_list if str(p.user_id) in existing_user_ids]
         QuerySet(WorkspaceUserResourcePermission).bulk_create(application_permission_list)
         rename(file)
 

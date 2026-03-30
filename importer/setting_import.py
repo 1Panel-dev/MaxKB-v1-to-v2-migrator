@@ -176,6 +176,9 @@ def model_import(file_list, source_name, current_page):
             for model in model_list
         ))
         # 插入授权数据
+        existing_user_ids = set(str(u) for u in QuerySet(User).filter(
+            id__in={str(p.user_id) for p in model_permission_list}).values_list('id', flat=True))
+        model_permission_list = [p for p in model_permission_list if str(p.user_id) in existing_user_ids]
         QuerySet(WorkspaceUserResourcePermission).bulk_create(model_permission_list)
         # 修改标识
         rename(file)
@@ -224,6 +227,9 @@ def team_member_permission_import(file_list, source_name, current_page):
             id__in=[wur.id for wur in workspace_user_resource_permission_model_list]).delete()
 
         # 插入数据
+        existing_user_ids = set(str(u) for u in QuerySet(User).filter(
+            id__in={str(p.user_id) for p in workspace_user_resource_permission_model_list}).values_list('id', flat=True))
+        workspace_user_resource_permission_model_list = [p for p in workspace_user_resource_permission_model_list if str(p.user_id) in existing_user_ids]
         QuerySet(WorkspaceUserResourcePermission).bulk_create(workspace_user_resource_permission_model_list)
         # 修改标识
         rename(file)
