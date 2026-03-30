@@ -382,6 +382,15 @@ def application_chat_record_import(file_list, source_name, current_page):
     for file in file_list:
         chat_record_list = pickle.loads(file.read_bytes())
         chat_record_model_list = [to_v2_chat_record(chat_record) for chat_record in chat_record_list]
+        # 过滤掉 chat_id 不存在的孤立记录，避免外键约束违反
+        chat_ids = {m.chat_id for m in chat_record_model_list}
+        existing_chat_ids = set(
+            QuerySet(Chat).filter(id__in=chat_ids).values_list('id', flat=True)
+        )
+        chat_record_model_list = [m for m in chat_record_model_list if m.chat_id in existing_chat_ids]
+        if not chat_record_model_list:
+            rename(file)
+            continue
         QuerySet(ChatRecord).filter(
             id__in=[chat_record_model.id for chat_record_model in chat_record_model_list]).delete()
         QuerySet(ChatRecord).bulk_create(chat_record_model_list, batch_size=20)
