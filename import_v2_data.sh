@@ -55,7 +55,7 @@ if [ ! -f "./migrate.tar" ]; then
     exit 1
 fi
 
-v2_data=$(docker inspect "$V2_CONTAINER" --format '{{.GraphDriver.Data.UpperDir}}')
+v2_data=$(docker inspect "$V2_CONTAINER" --format '{{if .GraphDriver.Data}}{{index .GraphDriver.Data "UpperDir"}}{{end}}' 2>/dev/null || true)
 migrate_dir="${v2_data}/opt/maxkb-app/v1-to-v2-migrator"
 
 # 复制迁移数据文件到v2容器
