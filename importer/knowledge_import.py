@@ -140,6 +140,15 @@ def extract_file_and_image_ids(content):
     return file_ids, image_ids
 
 
+def rewrite_internal_asset_paths(content):
+    """仅替换内部 API 资源路径，避免误改外链地址。"""
+    if '/api/file/' not in content and '/api/image/' not in content:
+        return content
+    content = _FILE_PATTERN.sub(r'./oss/file/\1', content)
+    content = _IMAGE_PATTERN.sub(r'./oss/file/\1', content)
+    return content
+
+
 def paragraph_import(file_list, source_name, current_page):
     for file in file_list:
         paragraph_list = pickle.loads(file.read_bytes())
@@ -180,11 +189,7 @@ def paragraph_import(file_list, source_name, current_page):
                 if all_ids:
                     doc_file_ids.setdefault(item.get('document'), []).extend(all_ids)
 
-                content = (
-                    content
-                    .replace('/api/file/', './oss/file/')
-                    .replace('/api/image/', './oss/file/')
-                )
+                content = rewrite_internal_asset_paths(content)
 
                 paragraph = Paragraph(
                     id=item.get('id'),
