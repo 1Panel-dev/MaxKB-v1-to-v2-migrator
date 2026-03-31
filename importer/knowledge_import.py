@@ -266,9 +266,21 @@ def to_v2_application_knowledge_mapping(application_dataset_mapping):
 
 
 def application_dataset_mapping_import(file_list, source_name, current_page):
+    from application.models import Application
     for file in file_list:
         application_dataset_mapping_list = pickle.loads(file.read_bytes())
-        adm_model_list = [to_v2_application_knowledge_mapping(adm) for adm in application_dataset_mapping_list]
+        application_ids = {adm.get('application') for adm in application_dataset_mapping_list if adm.get('application')}
+        existing_application_ids = set(
+            Application.objects.filter(id__in=application_ids).values_list('id', flat=True)
+        )
+        skipped = application_ids - existing_application_ids
+        if skipped:
+            print(f"[警告] 跳过 {len(skipped)} 条应用知识库关联关系，对应应用不存在: {skipped}")
+        adm_model_list = [
+            to_v2_application_knowledge_mapping(adm)
+            for adm in application_dataset_mapping_list
+            if adm.get('application') in existing_application_ids
+        ]
         QuerySet(ApplicationKnowledgeMapping).bulk_create(adm_model_list)
         rename(file)
 
