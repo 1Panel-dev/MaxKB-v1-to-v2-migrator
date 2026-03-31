@@ -231,26 +231,19 @@ def problem_paragraph_mapping_import(file_list, source_name, current_page):
 
 def _create_knowledge_vector_index(knowledge_id):
     """为指定知识库创建 HNSW 向量索引（若不存在）。"""
-    check_sql = (
-        f"SELECT indexname FROM pg_indexes "
-        f"WHERE tablename = 'embedding' AND indexname = 'embedding_hnsw_idx_{knowledge_id}'"
-    )
-    if sql_execute(check_sql, []):
-        return
-    dims_sql = f"SELECT vector_dims(embedding) AS dims FROM embedding WHERE knowledge_id = '{knowledge_id}' LIMIT 1"
-    result = sql_execute(dims_sql, [])
-    if not result:
-        return
-    dims = result[0]['dims']
-    # 超过2000维度不创建索引，pgvector hnsw索引不支持超过2000维度
-    if dims >= 2000:
-        return
-    create_sql = (
-        f'CREATE INDEX "embedding_hnsw_idx_{knowledge_id}" ON embedding '
-        f'USING hnsw ((embedding::vector({dims})) vector_cosine_ops) '
-        f"WHERE knowledge_id = '{knowledge_id}'"
-    )
-    update_execute(create_sql, [])
+    
+    sql = f"SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'embedding' AND indexname = 'embedding_hnsw_idx_{knowledge_id}'"
+    index = sql_execute(sql, [])
+    if not index:
+        sql = f"SELECT vector_dims(embedding) AS dims FROM embedding WHERE knowledge_id = '{knowledge_id}' LIMIT 1"
+        result = sql_execute(sql, [])
+        if len(result) == 0:
+            return
+        dims = result[0]['dims']
+        # 超过2000维度不创建索引，pgvector hnsw索引不支持超过2000维度
+        if dims < 2000:
+            sql = f"""CREATE INDEX "embedding_hnsw_idx_{knowledge_id}" ON embedding USING hnsw ((embedding::vector({dims})) vector_cosine_ops) WHERE knowledge_id = '{knowledge_id}'"""
+            update_execute(sql, [])
 
 
 def embedding_import(file_list, source_name, current_page):
@@ -258,9 +251,9 @@ def embedding_import(file_list, source_name, current_page):
         mapping_list = pickle.loads(file.read_bytes())
         embedding_model_list = [to_v2_embedding(item) for item in mapping_list]
         QuerySet(Embedding).bulk_create(embedding_model_list, batch_size=20)
-        # knowledge_ids = {item.get('dataset') for item in mapping_list if item.get('dataset')}
-        # for knowledge_id in knowledge_ids:
-        #     _create_knowledge_vector_index(knowledge_id)
+        knowledge_ids = {item.get('dataset') for item in mapping_list if item.get('dataset')}
+        for knowledge_id in knowledge_ids:
+            _create_knowledge_vector_index(knowledge_id)
         rename(file)
 
 
