@@ -144,8 +144,14 @@ def to_v2_platform_user(platform_user):
 def platform_user_import(platform_user_list, source_name, current_page):
     for platform_user in platform_user_list:
         platform_user_list = pickle.loads(platform_user.read_bytes())
-        platform_user_model_list = [to_v2_platform_user(platform_user) for platform_user in
-                                    platform_user_list]
+        platform_user_model_list = [to_v2_platform_user(pu) for pu in platform_user_list]
+        # 过滤掉 user_id 不存在的记录
+        user_ids = {m.user_id for m in platform_user_model_list if m.user_id}
+        existing_user_ids = set(User.objects.filter(id__in=user_ids).values_list('id', flat=True))
+        skipped = user_ids - existing_user_ids
+        if skipped:
+            print(f"[警告] 跳过 {len(skipped)} 条三方平台用户记录，对应用户不存在: {skipped}")
+        platform_user_model_list = [m for m in platform_user_model_list if m.user_id in existing_user_ids]
         # 删除数据
         PlatformUser.objects.filter(id__in=[s.id for s in platform_user_model_list]).delete()
         # 插入数据
