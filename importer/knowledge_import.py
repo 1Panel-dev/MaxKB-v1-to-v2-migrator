@@ -253,9 +253,9 @@ def embedding_import(file_list, source_name, current_page):
         mapping_list = pickle.loads(file.read_bytes())
         embedding_model_list = [to_v2_embedding(item) for item in mapping_list]
         QuerySet(Embedding).bulk_create(embedding_model_list, batch_size=20)
-        knowledge_ids = {item.get('dataset') for item in mapping_list if item.get('dataset')}
-        for knowledge_id in knowledge_ids:
-            _create_knowledge_vector_index(knowledge_id)
+        # knowledge_ids = {item.get('dataset') for item in mapping_list if item.get('dataset')}
+        # for knowledge_id in knowledge_ids:
+        #     _create_knowledge_vector_index(knowledge_id)
         rename(file)
 
 
