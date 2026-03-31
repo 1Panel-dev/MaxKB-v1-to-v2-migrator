@@ -176,9 +176,15 @@ def to_v2_system_api_key(system_api_key):
 
 def system_api_key_import(system_api_key_list, source_name, current_page):
     for system_api_key in system_api_key_list:
-        system_api_key_list = pickle.loads(system_api_key.read_bytes())
-        system_api_key_model_list = [to_v2_system_api_key(system_api_key) for system_api_key in
-                                     system_api_key_list]
+        sak_list = pickle.loads(system_api_key.read_bytes())
+        system_api_key_model_list = [to_v2_system_api_key(sak) for sak in sak_list]
+        # 过滤掉 user_id 不存在的记录
+        user_ids = {m.user_id for m in system_api_key_model_list if m.user_id}
+        existing_user_ids = set(User.objects.filter(id__in=user_ids).values_list('id', flat=True))
+        skipped = user_ids - existing_user_ids
+        if skipped:
+            print(f"[警告] 跳过 {len(skipped)} 条系统API密钥记录，对应用户不存在: {skipped}")
+        system_api_key_model_list = [m for m in system_api_key_model_list if m.user_id in existing_user_ids]
         # 删除数据
         SystemApiKey.objects.filter(id__in=[s.id for s in system_api_key_model_list]).delete()
         # 插入数据
