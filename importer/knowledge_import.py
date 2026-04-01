@@ -243,7 +243,10 @@ def _create_knowledge_vector_index(knowledge_id):
         # 超过2000维度不创建索引，pgvector hnsw索引不支持超过2000维度
         if dims < 2000:
             sql = f"""CREATE INDEX "embedding_hnsw_idx_{knowledge_id}" ON embedding USING hnsw ((embedding::vector({dims})) vector_cosine_ops) WHERE knowledge_id = '{knowledge_id}'"""
-            update_execute(sql, [])
+            try:
+                update_execute(sql, [])
+            except Exception as e:
+                print(f"[错误] 创建向量索引失败: {knowledge_id}, 错误信息: {e}")
 
 
 def embedding_import(file_list, source_name, current_page):
