@@ -48,7 +48,7 @@ def export():
         from xpack.serializers.license_serializers import LicenseSerializers
         from smartdoc.urls import xpack_cache
         LicenseSerializers().refresh()
-        if xpack_cache.set('XPACK_LICENSE_IS_VALID', False, None):
+        if xpack_cache.get('XPACK_LICENSE_IS_VALID'):
             from .xpack_export import export as xpack_export
             _timed("导出 xpack", xpack_export)
 
